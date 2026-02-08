@@ -41,6 +41,27 @@ struct GoogleMapsService {
         return URL(string: webString)
     }
 
+    static func directionsURLByName(
+        origin: String,
+        destination: String,
+        mode: TravelMode = .driving
+    ) -> URL? {
+        let encodedOrigin = origin.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        let encodedDest = destination.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+
+        guard !encodedOrigin.isEmpty, !encodedDest.isEmpty else { return nil }
+
+        let gmapsString = "comgooglemaps://?saddr=\(encodedOrigin)&daddr=\(encodedDest)&directionsmode=\(mode.rawValue)"
+
+        if let gmapsURL = URL(string: gmapsString),
+           UIApplication.shared.canOpenURL(gmapsURL) {
+            return gmapsURL
+        }
+
+        let webString = "https://www.google.com/maps/dir/?api=1&origin=\(encodedOrigin)&destination=\(encodedDest)&travelmode=\(mode.rawValue)"
+        return URL(string: webString)
+    }
+
     static func searchURL(query: String) -> URL? {
         let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
 

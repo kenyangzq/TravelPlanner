@@ -8,16 +8,27 @@ final class Trip {
     var startDate: Date = Date()
     var endDate: Date = Date()
     var destination: String = ""
+    var citiesRaw: String = ""
     @Relationship(deleteRule: .cascade, inverse: \TripEvent.trip)
     var events: [TripEvent] = []
     var createdAt: Date = Date()
 
-    init(name: String, startDate: Date, endDate: Date, destination: String = "") {
+    var cities: [String] {
+        get {
+            citiesRaw.isEmpty ? [] : citiesRaw.components(separatedBy: "|||").filter { !$0.isEmpty }
+        }
+        set {
+            citiesRaw = newValue.joined(separator: "|||")
+        }
+    }
+
+    init(name: String, startDate: Date, endDate: Date, destination: String = "", cities: [String] = []) {
         self.id = UUID()
         self.name = name
         self.startDate = startDate
         self.endDate = endDate
         self.destination = destination
+        self.citiesRaw = cities.joined(separator: "|||")
         self.events = []
         self.createdAt = Date()
     }

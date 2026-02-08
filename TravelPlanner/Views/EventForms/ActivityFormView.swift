@@ -3,21 +3,27 @@ import SwiftData
 
 struct ActivityFormView: View {
     let trip: Trip
+    var existingEvent: ActivityEvent?
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @State private var formVM = EventFormViewModel()
 
-    @State private var title = ""
+    @State private var title: String
     @State private var activityDate: Date
     @State private var endDate: Date
-    @State private var hasEndDate = false
-    @State private var locationName = ""
-    @State private var description = ""
+    @State private var hasEndDate: Bool
+    @State private var locationName: String
+    @State private var description: String
 
-    init(trip: Trip) {
+    init(trip: Trip, existingEvent: ActivityEvent? = nil) {
         self.trip = trip
-        _activityDate = State(initialValue: trip.startDate)
-        _endDate = State(initialValue: trip.startDate)
+        self.existingEvent = existingEvent
+        _title = State(initialValue: existingEvent?.title ?? "")
+        _activityDate = State(initialValue: existingEvent?.startDate ?? trip.startDate)
+        _endDate = State(initialValue: existingEvent?.endDate ?? trip.startDate)
+        _hasEndDate = State(initialValue: existingEvent != nil && existingEvent!.startDate != existingEvent!.endDate)
+        _locationName = State(initialValue: existingEvent?.activityLocationName ?? "")
+        _description = State(initialValue: existingEvent?.activityDescription ?? "")
     }
 
     var body: some View {
@@ -40,15 +46,90 @@ struct ActivityFormView: View {
 
             Section("Location") {
                 TextField("Location Name or Address", text: $locationName)
+                    .onChange(of: locationName) { _, _ in
+                        formVM.clearSearchState()
+                    }
+
+                if !locationName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    Button {
+                        Task {
+                            await formVM.searchPlace(
+                                query: locationName.trimmingCharacters(in: .whitespacesAndNewlines),
+                                cities: trip.cities
+                            )
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: "location.magnifyingglass")
+                            Text("Find Location")
+                            Spacer()
+                            if formVM.isGeocoding {
+                                ProgressView()
+                            }
+                        }
+                    }
+                    .disabled(formVM.isGeocoding)
+                }
             }
 
-            if formVM.isGeocoding {
-                Section {
-                    HStack {
-                        ProgressView()
-                        Text("Finding location...")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+            // Search results dropdown
+            if !formVM.searchResults.isEmpty && formVM.selectedResult == nil {
+                Section("Select Location") {
+                    ForEach(formVM.searchResults) { result in
+                        Button {
+                            formVM.selectSearchResult(result)
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: "mappin.circle.fill")
+                                    .foregroundStyle(.red)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(result.name)
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                        .foregroundStyle(.primary)
+                                    Text(result.formattedAddress)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Selected location confirmation
+            if let selected = formVM.selectedResult {
+                Section("Selected Location") {
+                    HStack(spacing: 8) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(selected.name)
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            Text(selected.formattedAddress)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+
+                    if let url = GoogleMapsService.searchURL(query: selected.formattedAddress) {
+                        Link(destination: url) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "map")
+                                Text("View on Google Maps")
+                                    .font(.subheadline)
+                            }
+                        }
+                    }
+
+                    if formVM.searchResults.count > 1 {
+                        Button("Change Selection") {
+                            formVM.selectedResult = nil
+                            formVM.resolvedAddress = nil
+                        }
+                        .font(.subheadline)
                     }
                 }
             }
@@ -56,13 +137,23 @@ struct ActivityFormView: View {
             if let error = formVM.geocodeError {
                 Section {
                     Label(error, systemImage: "exclamationmark.triangle")
-                        .foregroundStyle(.red)
+                        .foregroundStyle(.orange)
                         .font(.caption)
+
+                    if let url = GoogleMapsService.searchURL(query: "\(locationName) \(trip.destination)") {
+                        Link(destination: url) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "map")
+                                Text("Search on Google Maps")
+                                    .font(.subheadline)
+                            }
+                        }
+                    }
                 }
             }
 
             Section {
-                Button("Add to Itinerary") {
+                Button(existingEvent == nil ? "Add to Itinerary" : "Save Changes") {
                     Task { await saveActivity() }
                 }
                 .frame(maxWidth: .infinity)
@@ -73,22 +164,42 @@ struct ActivityFormView: View {
     }
 
     private func saveActivity() async {
-        let activity = ActivityEvent(
-            title: title.trimmingCharacters(in: .whitespacesAndNewlines),
-            date: activityDate,
-            endDate: hasEndDate ? endDate : nil,
-            locationName: locationName.trimmingCharacters(in: .whitespacesAndNewlines),
-            description: description.trimmingCharacters(in: .whitespacesAndNewlines)
-        )
+        let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedLocation = locationName.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        // Geocode location if provided
-        if !locationName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            await formVM.geocodeActivity(activity)
+        if let existing = existingEvent {
+            existing.title = trimmedTitle
+            existing.startDate = activityDate
+            existing.endDate = hasEndDate ? endDate : activityDate
+            existing.activityLocationName = trimmedLocation
+            existing.activityDescription = description.trimmingCharacters(in: .whitespacesAndNewlines)
+            existing.locationName = trimmedLocation
+
+            if formVM.selectedResult != nil {
+                formVM.applyToActivity(existing)
+            } else if !trimmedLocation.isEmpty {
+                await formVM.geocodeActivity(existing, destination: trip.destination)
+            }
+            try? modelContext.save()
+        } else {
+            let activity = ActivityEvent(
+                title: trimmedTitle,
+                date: activityDate,
+                endDate: hasEndDate ? endDate : nil,
+                locationName: trimmedLocation,
+                description: description.trimmingCharacters(in: .whitespacesAndNewlines)
+            )
+
+            if formVM.selectedResult != nil {
+                formVM.applyToActivity(activity)
+            } else if !trimmedLocation.isEmpty {
+                await formVM.geocodeActivity(activity, destination: trip.destination)
+            }
+
+            activity.trip = trip
+            modelContext.insert(activity)
+            try? modelContext.save()
         }
-
-        activity.trip = trip
-        modelContext.insert(activity)
-        try? modelContext.save()
         dismiss()
     }
 }

@@ -32,11 +32,116 @@ struct RestaurantFormView: View {
         Form {
             Section("Restaurant Details") {
                 TextField("Restaurant Name", text: $restaurantName)
+                    .onChange(of: restaurantName) { _, _ in
+                        formVM.clearSearchState()
+                    }
+
+                if !restaurantName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    Button {
+                        Task {
+                            await formVM.searchPlace(
+                                query: restaurantName.trimmingCharacters(in: .whitespacesAndNewlines),
+                                cities: trip.cities
+                            )
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: "location.magnifyingglass")
+                            Text("Find Location")
+                            Spacer()
+                            if formVM.isGeocoding {
+                                ProgressView()
+                            }
+                        }
+                    }
+                    .disabled(formVM.isGeocoding)
+                }
+
                 TextField("Cuisine Type (e.g. Italian, Japanese)", text: $cuisineType)
 
                 Stepper("Party Size: \(partySize)", value: $partySize, in: 1...20)
 
                 TextField("Confirmation Number", text: $confirmationNumber)
+            }
+
+            // Search results dropdown
+            if !formVM.searchResults.isEmpty && formVM.selectedResult == nil {
+                Section("Select Location") {
+                    ForEach(formVM.searchResults) { result in
+                        Button {
+                            formVM.selectSearchResult(result)
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: "mappin.circle.fill")
+                                    .foregroundStyle(.red)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(result.name)
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                        .foregroundStyle(.primary)
+                                    Text(result.formattedAddress)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Selected location confirmation
+            if let selected = formVM.selectedResult {
+                Section("Selected Location") {
+                    HStack(spacing: 8) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(selected.name)
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            Text(selected.formattedAddress)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+
+                    if let url = GoogleMapsService.searchURL(query: selected.formattedAddress) {
+                        Link(destination: url) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "map")
+                                Text("View on Google Maps")
+                                    .font(.subheadline)
+                            }
+                        }
+                    }
+
+                    if formVM.searchResults.count > 1 {
+                        Button("Change Selection") {
+                            formVM.selectedResult = nil
+                            formVM.resolvedAddress = nil
+                        }
+                        .font(.subheadline)
+                    }
+                }
+            }
+
+            if let error = formVM.geocodeError {
+                Section {
+                    Label(error, systemImage: "exclamationmark.triangle")
+                        .foregroundStyle(.orange)
+                        .font(.caption)
+
+                    if let url = GoogleMapsService.searchURL(query: "\(restaurantName) \(trip.destination)") {
+                        Link(destination: url) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "map")
+                                Text("Search on Google Maps")
+                                    .font(.subheadline)
+                            }
+                        }
+                    }
+                }
             }
 
             Section("Reservation") {
@@ -47,25 +152,6 @@ struct RestaurantFormView: View {
             Section("Notes") {
                 TextField("Notes", text: $notes, axis: .vertical)
                     .lineLimit(3...6)
-            }
-
-            if formVM.isGeocoding {
-                Section {
-                    HStack {
-                        ProgressView()
-                        Text("Finding restaurant location...")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-            }
-
-            if let error = formVM.geocodeError {
-                Section {
-                    Label(error, systemImage: "exclamationmark.triangle")
-                        .foregroundStyle(.red)
-                        .font(.caption)
-                }
             }
 
             Section {
@@ -94,8 +180,10 @@ struct RestaurantFormView: View {
             existing.notes = notes
             existing.locationName = trimmedName
 
-            if !trimmedName.isEmpty {
-                await formVM.geocodeRestaurant(existing)
+            if formVM.selectedResult != nil {
+                formVM.applyToRestaurant(existing)
+            } else if !trimmedName.isEmpty {
+                await formVM.geocodeRestaurant(existing, destination: trip.destination)
             }
             try? modelContext.save()
         } else {
@@ -109,8 +197,10 @@ struct RestaurantFormView: View {
             restaurant.confirmationNumber = confirmationNumber
             restaurant.notes = notes
 
-            if !trimmedName.isEmpty {
-                await formVM.geocodeRestaurant(restaurant)
+            if formVM.selectedResult != nil {
+                formVM.applyToRestaurant(restaurant)
+            } else if !trimmedName.isEmpty {
+                await formVM.geocodeRestaurant(restaurant, destination: trip.destination)
             }
 
             restaurant.trip = trip

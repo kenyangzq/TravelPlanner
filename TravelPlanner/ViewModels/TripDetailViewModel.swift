@@ -79,21 +79,36 @@ final class TripDetailViewModel {
     // MARK: - Navigation Link Generation
 
     private func buildNavigationLink(from: TripEvent, to: TripEvent) -> EventNavigationLink? {
-        guard let fromCoord = extractEndCoordinate(from: from),
-              let toCoord = extractStartCoordinate(from: to) else {
-            return nil
+        let fromCoord = extractEndCoordinate(from: from)
+        let toCoord = extractStartCoordinate(from: to)
+        let fromLabel = extractEndLabel(from: from)
+        let toLabel = extractStartLabel(from: to)
+
+        var url: URL? = nil
+
+        if let fromCoord, let toCoord {
+            // Both have coordinates — use coordinate-based directions
+            url = GoogleMapsService.directionsURL(
+                fromLat: fromCoord.lat, fromLng: fromCoord.lng,
+                toLat: toCoord.lat, toLng: toCoord.lng
+            )
+        } else {
+            // Use name-based Google Maps directions as fallback
+            let fromQuery = extractEndLocationName(from: from)
+            let toQuery = extractStartLocationName(from: to)
+            if !fromQuery.isEmpty && !toQuery.isEmpty {
+                url = GoogleMapsService.directionsURLByName(origin: fromQuery, destination: toQuery)
+            }
         }
 
-        let url = GoogleMapsService.directionsURL(
-            fromLat: fromCoord.lat, fromLng: fromCoord.lng,
-            toLat: toCoord.lat, toLng: toCoord.lng
-        )
+        // Only show link if we have a URL
+        guard let url else { return nil }
 
         return EventNavigationLink(
             fromEvent: from,
             toEvent: to,
-            fromLabel: extractEndLabel(from: from),
-            toLabel: extractStartLabel(from: to),
+            fromLabel: fromLabel,
+            toLabel: toLabel,
             directionsURL: url
         )
     }
@@ -156,6 +171,44 @@ final class TripDetailViewModel {
             }
         }
         return nil
+    }
+
+    private func extractEndLocationName(from event: TripEvent) -> String {
+        switch event {
+        case let flight as FlightEvent:
+            if !flight.arrivalAirportName.isEmpty { return flight.arrivalAirportName }
+            if !flight.arrivalAirportIATA.isEmpty { return "\(flight.arrivalAirportIATA) airport" }
+            return ""
+        case let car as CarRentalEvent:
+            return car.returnLocationName
+        case let hotel as HotelEvent:
+            return hotel.hotelName
+        case let restaurant as RestaurantEvent:
+            return restaurant.restaurantName
+        case let activity as ActivityEvent:
+            return activity.activityLocationName
+        default:
+            return event.locationName.isEmpty ? event.title : event.locationName
+        }
+    }
+
+    private func extractStartLocationName(from event: TripEvent) -> String {
+        switch event {
+        case let flight as FlightEvent:
+            if !flight.departureAirportName.isEmpty { return flight.departureAirportName }
+            if !flight.departureAirportIATA.isEmpty { return "\(flight.departureAirportIATA) airport" }
+            return ""
+        case let car as CarRentalEvent:
+            return car.pickupLocationName
+        case let hotel as HotelEvent:
+            return hotel.hotelName
+        case let restaurant as RestaurantEvent:
+            return restaurant.restaurantName
+        case let activity as ActivityEvent:
+            return activity.activityLocationName
+        default:
+            return event.locationName.isEmpty ? event.title : event.locationName
+        }
     }
 
     private func extractEndLabel(from event: TripEvent) -> String {

@@ -15,11 +15,11 @@ struct EditEventView: View {
                 case let carRental as CarRentalEvent:
                     CarRentalEditFormView(trip: trip, carRental: carRental)
                 case let hotel as HotelEvent:
-                    HotelEditFormView(trip: trip, hotel: hotel)
+                    HotelFormView(trip: trip, existingEvent: hotel)
                 case let restaurant as RestaurantEvent:
                     RestaurantFormView(trip: trip, existingEvent: restaurant)
                 case let activity as ActivityEvent:
-                    ActivityEditFormView(trip: trip, activity: activity)
+                    ActivityFormView(trip: trip, existingEvent: activity)
                 default:
                     Text("Unknown event type")
                 }
@@ -151,122 +151,6 @@ struct CarRentalEditFormView: View {
         if carRental.hasCarRental {
             await formVM.geocodeCarRentalPickup(carRental)
             await formVM.geocodeCarRentalReturn(carRental)
-        }
-
-        try? modelContext.save()
-        dismiss()
-    }
-}
-
-// MARK: - Hotel Edit Form
-
-struct HotelEditFormView: View {
-    let trip: Trip
-    @Bindable var hotel: HotelEvent
-    @Environment(\.modelContext) private var modelContext
-    @Environment(\.dismiss) private var dismiss
-    @State private var formVM = EventFormViewModel()
-
-    var body: some View {
-        Form {
-            Section("Hotel Details") {
-                TextField("Hotel Name", text: $hotel.hotelName)
-            }
-
-            Section("Dates") {
-                DatePicker("Check-in", selection: $hotel.checkInDate)
-                DatePicker("Check-out", selection: $hotel.checkOutDate, in: hotel.checkInDate...)
-            }
-
-            Section("Notes") {
-                TextField("Notes", text: $hotel.notes, axis: .vertical)
-                    .lineLimit(3...6)
-            }
-
-            Section {
-                Button("Save Changes") {
-                    Task { await saveChanges() }
-                }
-                .frame(maxWidth: .infinity)
-                .fontWeight(.semibold)
-                .disabled(hotel.hotelName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            }
-        }
-    }
-
-    private func saveChanges() async {
-        hotel.title = hotel.hotelName
-        hotel.startDate = hotel.checkInDate
-        hotel.endDate = hotel.checkOutDate
-        hotel.locationName = hotel.hotelName
-
-        await formVM.geocodeHotel(hotel)
-        try? modelContext.save()
-        dismiss()
-    }
-}
-
-// MARK: - Activity Edit Form
-
-struct ActivityEditFormView: View {
-    let trip: Trip
-    @Bindable var activity: ActivityEvent
-    @Environment(\.modelContext) private var modelContext
-    @Environment(\.dismiss) private var dismiss
-    @State private var formVM = EventFormViewModel()
-    @State private var hasEndDate: Bool
-
-    init(trip: Trip, activity: ActivityEvent) {
-        self.trip = trip
-        self.activity = activity
-        _hasEndDate = State(initialValue: activity.startDate != activity.endDate)
-    }
-
-    var body: some View {
-        Form {
-            Section("Activity Details") {
-                TextField("Activity Name", text: $activity.title)
-                TextField("Description", text: $activity.activityDescription, axis: .vertical)
-                    .lineLimit(3...6)
-            }
-
-            Section("Date & Time") {
-                DatePicker("Start", selection: $activity.startDate)
-
-                Toggle("Has End Time", isOn: $hasEndDate)
-
-                if hasEndDate {
-                    DatePicker("End", selection: $activity.endDate, in: activity.startDate...)
-                }
-            }
-
-            Section("Location") {
-                TextField("Location Name or Address", text: $activity.activityLocationName)
-            }
-
-            Section("Notes") {
-                TextField("Notes", text: $activity.notes, axis: .vertical)
-                    .lineLimit(3...6)
-            }
-
-            Section {
-                Button("Save Changes") {
-                    Task { await saveChanges() }
-                }
-                .frame(maxWidth: .infinity)
-                .fontWeight(.semibold)
-                .disabled(activity.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            }
-        }
-    }
-
-    private func saveChanges() async {
-        if !hasEndDate {
-            activity.endDate = activity.startDate
-        }
-
-        if !activity.activityLocationName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            await formVM.geocodeActivity(activity)
         }
 
         try? modelContext.save()
