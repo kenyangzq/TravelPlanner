@@ -35,16 +35,6 @@
 			path = TravelPlanner;
 			sourceTree = "<group>";
 		};
-		4EB57D362F37C0EE00AA249E /* TravelPlannerTests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = TravelPlannerTests;
-			sourceTree = "<group>";
-		};
-		4EB57D402F37C0EE00AA249E /* TravelPlannerUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = TravelPlannerUITests;
-			sourceTree = "<group>";
-		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -76,8 +66,6 @@
 			isa = PBXGroup;
 			children = (
 				4EB57D282F37C0EC00AA249E /* TravelPlanner */,
-				4EB57D362F37C0EE00AA249E /* TravelPlannerTests */,
-				4EB57D402F37C0EE00AA249E /* TravelPlannerUITests */,
 				4EB57D272F37C0EC00AA249E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -130,9 +118,6 @@
 			dependencies = (
 				4EB57D352F37C0EE00AA249E /* PBXTargetDependency */,
 			);
-			fileSystemSynchronizedGroups = (
-				4EB57D362F37C0EE00AA249E /* TravelPlannerTests */,
-			);
 			name = TravelPlannerTests;
 			packageProductDependencies = (
 			);
@@ -152,9 +137,6 @@
 			);
 			dependencies = (
 				4EB57D3F2F37C0EE00AA249E /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				4EB57D402F37C0EE00AA249E /* TravelPlannerUITests */,
 			);
 			name = TravelPlannerUITests;
 			packageProductDependencies = (
@@ -395,6 +377,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7483B99S24;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -426,6 +409,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7483B99S24;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

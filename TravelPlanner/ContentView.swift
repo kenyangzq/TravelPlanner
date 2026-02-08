@@ -6,19 +6,28 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        NavigationStack {
+            TripListView()
+                .navigationDestination(for: Trip.self) { trip in
+                    ItineraryView(trip: trip)
+                }
         }
-        .padding()
     }
 }
 
 #Preview {
     ContentView()
+        .modelContainer(for: [
+            Trip.self,
+            TripEvent.self,
+            FlightEvent.self,
+            CarRentalEvent.self,
+            HotelEvent.self,
+            ActivityEvent.self,
+            RestaurantEvent.self
+        ], inMemory: true)
 }

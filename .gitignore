@@ -1,0 +1,36 @@
+# Xcode
+build/
+DerivedData/
+*.xcuserdata
+*.xcworkspace
+!*.xcworkspace/contents.xcworkspacedata
+xcuserdata/
+
+# Swift Package Manager
+.build/
+Packages/
+Package.resolved
+
+# CocoaPods
+Pods/
+
+# macOS
+.DS_Store
+*.swp
+*~
+
+# IDE
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+!default.pbxuser
+!default.mode1v3
+!default.mode2v3
+!default.perspectivev3
+
+# Temporary files
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
