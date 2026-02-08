@@ -3,18 +3,57 @@ import SwiftUI
 struct ItineraryDaySection: View {
     let date: Date
     let items: [ItineraryItem]
+    let dayHotel: DayHotelInfo?
     let onDelete: (TripEvent) -> Void
     let onTap: (TripEvent) -> Void
 
     var body: some View {
         Section {
+            // Hotel banner at top of each day
+            if let dayHotel {
+                VStack(spacing: 0) {
+                    HStack(spacing: 10) {
+                        Image(systemName: "building.2.fill")
+                            .font(.title3)
+                            .foregroundStyle(.purple)
+                            .frame(width: 36)
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(dayHotel.hotel.hotelName.isEmpty ? "Hotel" : dayHotel.hotel.hotelName)
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                            if !dayHotel.hotel.hotelAddress.isEmpty {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "mappin")
+                                        .font(.caption2)
+                                    Text(dayHotel.hotel.hotelAddress)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+
+                        Spacer()
+                    }
+                    .padding(.vertical, 6)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        onTap(dayHotel.hotel)
+                    }
+
+                    // Navigation from hotel to first event
+                    if let navLink = dayHotel.navigationToFirstEvent {
+                        NavigationLinkRow(link: navLink)
+                    }
+                }
+            }
+
             ForEach(items) { item in
                 VStack(spacing: 0) {
                     EventRowView(event: item.event)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
+                        .simultaneousGesture(TapGesture().onEnded {
                             onTap(item.event)
-                        }
+                        })
                         .swipeActions(edge: .trailing) {
                             Button(role: .destructive) {
                                 onDelete(item.event)
@@ -22,11 +61,6 @@ struct ItineraryDaySection: View {
                                 Label("Delete", systemImage: "trash")
                             }
                         }
-
-                    // Hotel navigation links
-                    if let hotelLink = item.hotelLink {
-                        HotelDirectionsRow(link: hotelLink)
-                    }
 
                     if let navLink = item.navigationLink {
                         NavigationLinkRow(link: navLink)
@@ -41,62 +75,5 @@ struct ItineraryDaySection: View {
             }
             .padding(.vertical, 4)
         }
-    }
-}
-
-// MARK: - Hotel Directions Row
-
-struct HotelDirectionsRow: View {
-    let link: HotelDirectionsLink
-
-    var body: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "building.2.fill")
-                .font(.caption)
-                .foregroundStyle(.purple)
-                .frame(width: 36)
-
-            VStack(alignment: .leading, spacing: 6) {
-                if let fromURL = link.fromHotelURL {
-                    Link(destination: fromURL) {
-                        HStack(spacing: 5) {
-                            Image(systemName: "arrow.right.circle.fill")
-                                .font(.caption)
-                                .foregroundStyle(.green)
-                            Text("From \(link.hotelName)")
-                                .font(.caption)
-                            Spacer()
-                            Image(systemName: "arrow.triangle.turn.up.right.circle.fill")
-                                .font(.caption)
-                        }
-                        .foregroundStyle(.blue)
-                        .padding(.vertical, 4)
-                        .contentShape(Rectangle())
-                    }
-                }
-
-                if let toURL = link.toHotelURL {
-                    Link(destination: toURL) {
-                        HStack(spacing: 5) {
-                            Image(systemName: "arrow.left.circle.fill")
-                                .font(.caption)
-                                .foregroundStyle(.orange)
-                            Text("Back to \(link.hotelName)")
-                                .font(.caption)
-                            Spacer()
-                            Image(systemName: "arrow.triangle.turn.up.right.circle.fill")
-                                .font(.caption)
-                        }
-                        .foregroundStyle(.blue)
-                        .padding(.vertical, 4)
-                        .contentShape(Rectangle())
-                    }
-                }
-            }
-
-            Spacer()
-        }
-        .padding(.vertical, 4)
-        .padding(.leading, 4)
     }
 }

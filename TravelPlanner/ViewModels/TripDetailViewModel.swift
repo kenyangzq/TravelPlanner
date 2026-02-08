@@ -9,17 +9,15 @@ struct EventNavigationLink {
     let directionsURL: URL?
 }
 
-struct HotelDirectionsLink {
-    let hotelName: String
-    let toHotelURL: URL?
-    let fromHotelURL: URL?
+struct DayHotelInfo {
+    let hotel: HotelEvent
+    let navigationToFirstEvent: EventNavigationLink?
 }
 
 struct ItineraryItem: Identifiable {
     var id: UUID { event.id }
     let event: TripEvent
     let navigationLink: EventNavigationLink?
-    let hotelLink: HotelDirectionsLink?
 }
 
 @Observable
@@ -52,9 +50,6 @@ final class TripDetailViewModel {
         let sorted = trip.sortedEvents
         var items: [ItineraryItem] = []
 
-        // Collect all hotels for hotel link generation
-        let hotels = sorted.compactMap { $0 as? HotelEvent }
-
         for (index, event) in sorted.enumerated() {
             var navLink: EventNavigationLink? = nil
 
@@ -63,22 +58,15 @@ final class TripDetailViewModel {
                 navLink = buildNavigationLink(from: event, to: nextEvent)
             }
 
-            // Build hotel directions link for non-hotel events
-            let hotelLink: HotelDirectionsLink?
-            if event is HotelEvent {
-                hotelLink = nil
-            } else {
-                hotelLink = buildHotelLink(for: event, hotels: hotels)
-            }
-
-            items.append(ItineraryItem(event: event, navigationLink: navLink, hotelLink: hotelLink))
+            items.append(ItineraryItem(event: event, navigationLink: navLink))
         }
 
         return items
     }
 
-    func eventsByDay(for trip: Trip) -> [(date: Date, items: [ItineraryItem])] {
+    func eventsByDay(for trip: Trip) -> [(date: Date, items: [ItineraryItem], dayHotel: DayHotelInfo?)] {
         let allItems = itineraryItems(for: trip)
+        let hotels = trip.sortedEvents.compactMap { $0 as? HotelEvent }
 
         let grouped = Dictionary(grouping: allItems) {
             $0.event.startDate.startOfDay
@@ -86,7 +74,29 @@ final class TripDetailViewModel {
 
         return grouped
             .sorted { $0.key < $1.key }
-            .map { (date: $0.key, items: $0.value) }
+            .map { entry in
+                let date = entry.key
+                let items = entry.value
+
+                // Find hotel covering this day, but skip if this is the check-in date
+                let dayHotel: DayHotelInfo?
+                if let hotel = findHotel(for: date, in: hotels),
+                   date.startOfDay != hotel.checkInDate.startOfDay {
+                    // Find first non-hotel event to create navigation link
+                    let firstNonHotelEvent = items.first(where: { !($0.event is HotelEvent) })?.event
+                    let navLink: EventNavigationLink?
+                    if let firstEvent = firstNonHotelEvent {
+                        navLink = buildNavigationLink(from: hotel, to: firstEvent)
+                    } else {
+                        navLink = nil
+                    }
+                    dayHotel = DayHotelInfo(hotel: hotel, navigationToFirstEvent: navLink)
+                } else {
+                    dayHotel = nil
+                }
+
+                return (date: date, items: items, dayHotel: dayHotel)
+            }
     }
 
     func deleteEvent(_ event: TripEvent, from modelContext: ModelContext) {
@@ -278,62 +288,14 @@ final class TripDetailViewModel {
         }
     }
 
-    // MARK: - Hotel Directions
+    // MARK: - Hotel Lookup
 
     /// Find the hotel that covers a given date (check-in <= date < check-out).
+    /// Note: The check-in date is excluded from day header display in eventsByDay.
     private func findHotel(for date: Date, in hotels: [HotelEvent]) -> HotelEvent? {
         hotels.first { hotel in
             let day = date.startOfDay
             return hotel.checkInDate.startOfDay <= day && day < hotel.checkOutDate.startOfDay
         }
-    }
-
-    /// Build directions links to/from the hotel for a non-hotel event.
-    private func buildHotelLink(for event: TripEvent, hotels: [HotelEvent]) -> HotelDirectionsLink? {
-        // Skip hotel links for flights — flights have their own airport navigation
-        if event is FlightEvent { return nil }
-
-        guard let hotel = findHotel(for: event.startDate, in: hotels) else { return nil }
-
-        let hotelCoord: (lat: Double, lng: Double)?
-        if let lat = hotel.hotelLatitude, let lng = hotel.hotelLongitude {
-            hotelCoord = (lat, lng)
-        } else {
-            hotelCoord = nil
-        }
-
-        // Use the event's actual location coordinates
-        let eventCoord = extractEndCoordinate(from: event)
-        let hotelName = hotel.hotelName.isEmpty ? "Hotel" : hotel.hotelName
-        let eventName = extractEndLocationName(from: event)
-
-        var toHotelURL: URL?
-        var fromHotelURL: URL?
-
-        if let ec = eventCoord, let hc = hotelCoord {
-            // Both have coordinates
-            toHotelURL = GoogleMapsService.directionsURL(fromLat: ec.lat, fromLng: ec.lng, toLat: hc.lat, toLng: hc.lng)
-            fromHotelURL = GoogleMapsService.directionsURL(fromLat: hc.lat, fromLng: hc.lng, toLat: ec.lat, toLng: ec.lng)
-        } else if let ec = eventCoord, !hotelName.isEmpty {
-            // Event has coords, hotel name-based
-            toHotelURL = GoogleMapsService.directionsURLByName(origin: "\(ec.lat),\(ec.lng)", destination: hotelName)
-            fromHotelURL = GoogleMapsService.directionsURLByName(origin: hotelName, destination: "\(ec.lat),\(ec.lng)")
-        } else if !eventName.isEmpty, let hc = hotelCoord {
-            // Event name-based, hotel has coords
-            toHotelURL = GoogleMapsService.directionsURLByName(origin: eventName, destination: "\(hc.lat),\(hc.lng)")
-            fromHotelURL = GoogleMapsService.directionsURLByName(origin: "\(hc.lat),\(hc.lng)", destination: eventName)
-        } else if !eventName.isEmpty && !hotelName.isEmpty {
-            // Both name-based
-            toHotelURL = GoogleMapsService.directionsURLByName(origin: eventName, destination: hotelName)
-            fromHotelURL = GoogleMapsService.directionsURLByName(origin: hotelName, destination: eventName)
-        }
-
-        guard toHotelURL != nil || fromHotelURL != nil else { return nil }
-
-        return HotelDirectionsLink(
-            hotelName: hotelName,
-            toHotelURL: toHotelURL,
-            fromHotelURL: fromHotelURL
-        )
     }
 }

@@ -9,6 +9,17 @@ enum TravelMode: String {
 
 struct GoogleMapsService {
 
+    /// Character set safe for URL query parameter values (excludes &, =, +, etc.)
+    private static var queryValueAllowed: CharacterSet {
+        var cs = CharacterSet.urlQueryAllowed
+        cs.remove(charactersIn: "&=+#")
+        return cs
+    }
+
+    private static func encodeValue(_ value: String) -> String {
+        value.addingPercentEncoding(withAllowedCharacters: queryValueAllowed) ?? value
+    }
+
     static func directionsURL(
         fromLat: Double, fromLng: Double,
         toLat: Double, toLng: Double,
@@ -22,13 +33,13 @@ struct GoogleMapsService {
             return gmapsURL
         }
 
-        // Fallback to web URL
-        let webString = "https://www.google.com/maps/dir/?api=1&origin=\(fromLat),\(fromLng)&destination=\(toLat),\(toLng)&travelmode=\(mode.rawValue)"
+        // Fallback to web URL — dir_action=navigate forces directions mode
+        let webString = "https://www.google.com/maps/dir/?api=1&origin=\(fromLat),\(fromLng)&destination=\(toLat),\(toLng)&travelmode=\(mode.rawValue)&dir_action=navigate"
         return URL(string: webString)
     }
 
     static func locationURL(lat: Double, lng: Double, label: String = "") -> URL? {
-        let encoded = label.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        let encoded = encodeValue(label)
 
         let gmapsString = "comgooglemaps://?q=\(encoded)&center=\(lat),\(lng)&zoom=15"
 
@@ -46,8 +57,8 @@ struct GoogleMapsService {
         destination: String,
         mode: TravelMode = .driving
     ) -> URL? {
-        let encodedOrigin = origin.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        let encodedDest = destination.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        let encodedOrigin = encodeValue(origin)
+        let encodedDest = encodeValue(destination)
 
         guard !encodedOrigin.isEmpty, !encodedDest.isEmpty else { return nil }
 
@@ -58,12 +69,12 @@ struct GoogleMapsService {
             return gmapsURL
         }
 
-        let webString = "https://www.google.com/maps/dir/?api=1&origin=\(encodedOrigin)&destination=\(encodedDest)&travelmode=\(mode.rawValue)"
+        let webString = "https://www.google.com/maps/dir/?api=1&origin=\(encodedOrigin)&destination=\(encodedDest)&travelmode=\(mode.rawValue)&dir_action=navigate"
         return URL(string: webString)
     }
 
     static func searchURL(query: String) -> URL? {
-        let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        let encoded = encodeValue(query)
 
         let gmapsString = "comgooglemaps://?q=\(encoded)"
         if let gmapsURL = URL(string: gmapsString),

@@ -80,6 +80,7 @@ struct ItineraryView: View {
                 ItineraryDaySection(
                     date: day.date,
                     items: day.items,
+                    dayHotel: day.dayHotel,
                     onDelete: { event in
                         viewModel.deleteEvent(event, from: modelContext)
                     },
