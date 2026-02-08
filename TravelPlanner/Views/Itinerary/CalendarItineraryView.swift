@@ -10,7 +10,7 @@ struct CalendarItineraryView: View {
     private let startHour = 0
     private let endHour = 24
     private let timeColumnWidth: CGFloat = 56
-    private let hotelBannerHeight: CGFloat = 30
+    private let hotelBannerHeight: CGFloat = 44
     private let hotelBannerSpacing: CGFloat = 2
 
     private var hotels: [HotelEvent] {
@@ -43,6 +43,12 @@ struct CalendarItineraryView: View {
         return hotels.filter { hotel in
             hotel.checkInDate.startOfDay <= day && day < hotel.checkOutDate.startOfDay
         }
+    }
+
+    /// Find the first non-hotel event for a given date
+    private func findFirstNonHotelEvent(for date: Date) -> TripEvent? {
+        let items = eventItemsByDay[date] ?? []
+        return items.first(where: { !($0.event is HotelEvent) })?.event
     }
 
     /// Max number of hotel rows needed across all days.
@@ -150,7 +156,7 @@ struct CalendarItineraryView: View {
 
                 // Event blocks
                 ForEach(nonHotelItems) { item in
-                    eventBlock(event: item.event)
+                    eventBlock(item: item)
                 }
             }
             .frame(height: CGFloat(endHour - startHour) * hourHeight)
@@ -167,13 +173,29 @@ struct CalendarItineraryView: View {
                 Button {
                     onEditEvent(hotel)
                 } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: "building.2.fill")
-                            .font(.system(size: 10))
-                        Text(hotel.hotelName)
-                            .font(.system(size: 11))
-                            .fontWeight(.medium)
-                            .lineLimit(1)
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "building.2.fill")
+                                .font(.system(size: 10))
+                            Text(hotel.hotelName)
+                                .font(.system(size: 11))
+                                .fontWeight(.medium)
+                                .lineLimit(1)
+                        }
+
+                        // Navigation to first event
+                        if let firstEvent = findFirstNonHotelEvent(for: date),
+                           let navLink = viewModel.buildNavigationLink(from: hotel, to: firstEvent) {
+                            Link(destination: navLink.directionsURL) {
+                                HStack(spacing: 2) {
+                                    Image(systemName: "arrow.triangle.turn.up.right.circle.fill")
+                                        .font(.system(size: 8))
+                                    Text("To \(navLink.toLabel)")
+                                        .font(.system(size: 8))
+                                        .lineLimit(1)
+                                }
+                            }
+                        }
                     }
                     .foregroundStyle(.purple)
                     .padding(.horizontal, 8)
@@ -183,6 +205,7 @@ struct CalendarItineraryView: View {
                     .background(.purple.opacity(0.15), in: RoundedRectangle(cornerRadius: 6))
                 }
                 .tint(.purple)
+                .buttonStyle(.plain)
                 .padding(.horizontal, 3)
             }
 
@@ -198,7 +221,8 @@ struct CalendarItineraryView: View {
 
     // MARK: - Event Block
 
-    private func eventBlock(event: TripEvent) -> some View {
+    private func eventBlock(item: ItineraryItem) -> some View {
+        let event = item.event
         let startMinutes = minutesSinceStartOfDay(event.startDate)
         let endMinutes = minutesSinceStartOfDay(event.endDate)
         let duration = max(endMinutes - startMinutes, 30)
@@ -225,6 +249,26 @@ struct CalendarItineraryView: View {
                     Text(event.locationName)
                         .font(.system(size: 9))
                         .lineLimit(1)
+                }
+
+                // Navigation link (if available)
+                if let navLink = item.navigationLink {
+                    Divider()
+                        .padding(.horizontal, 4)
+
+                    Link(destination: navLink.directionsURL) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.triangle.turn.up.right.circle.fill")
+                                .font(.system(size: 9))
+                            Text("Navigate")
+                                .font(.system(size: 9))
+                            Spacer()
+                            Text("to \(navLink.toLabel)")
+                                .font(.system(size: 9))
+                                .foregroundStyle(.secondary)
+                        }
+                        .foregroundStyle(.blue)
+                    }
                 }
             }
             .padding(4)

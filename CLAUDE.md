@@ -66,6 +66,7 @@ TravelPlanner/
 - `DayHotelInfo` struct holds per-day hotel info and optional navigation link to first event; passed to `ItineraryDaySection` via `dayHotel` parameter
 - `eventsByDay(for:)` returns tuples of `(date, items, dayHotel)` — used by list view. Excludes check-in date from dayHotel (hotel appears as a regular event in chronological order on check-in day)
 - `itineraryItems(for:)` returns flat list of `ItineraryItem` — used by calendar view which groups by day internally and iterates all trip dates
+- `buildNavigationLink(from:to:)` is a public method in `TripDetailViewModel` that creates navigation links between any two events — reused by both list and calendar views
 
 ## Event Types
 | Type | Key Fields | Geocoding |
@@ -78,7 +79,7 @@ TravelPlanner/
 
 ## Views
 - **List view**: Events grouped by day (only days with events), sorted by time. Each day shows the active hotel at the top (except check-in date where the hotel appears as a regular event) and a navigation link from hotel to the first event. Events have navigation links between consecutive events.
-- **Calendar view**: Google Calendar-style with a single `ScrollView([.horizontal, .vertical])` so all day columns scroll together. Shows all dates in the trip range (`trip.startDate` through `trip.endDate`). Time labels with AM/PM on the left. Hotel banners appear on all dates they cover (check-in to check-out) via `findHotels(for:)`, with support for overlapping hotels (multiple rows) when switching hotels on a date. Non-hotel events are time-positioned blocks.
+- **Calendar view**: Google Calendar-style with a single `ScrollView([.horizontal, .vertical])` so all day columns scroll together. Shows all dates in the trip range (`trip.startDate` through `trip.endDate`). Time labels with AM/PM on the left. Hotel banners appear on all dates they cover (check-in to check-out) via `findHotels(for:)`, with support for overlapping hotels (multiple rows) when switching hotels on a date. Non-hotel events are time-positioned blocks with navigation links shown below each event. Hotel banners include navigation to the first event of the day.
 - **Tap-to-edit**: Tapping a flight → FlightDetailView; tapping other events → edit sheet; tapping hotel banner in calendar → hotel edit sheet
 - **Flight detail**: Full scrollable view with route card, airport cards, map links
 - **Trip list**: Shows trip name, destination, cities, date range, and event count
@@ -97,3 +98,4 @@ TravelPlanner/
 
 ## Recent Changes
 - **2025-02-08**: Fixed hotel map link button not clickable - removed `.contentShape(Rectangle())` and changed to `.simultaneousGesture` in `ItineraryDaySection` to allow map button taps while preserving tap-to-edit on row.
+- **2025-02-08**: Fixed hotel-to-restaurant navigation links - calendar view now shows navigation links between events and from hotel banners to first event of each day. Made `buildNavigationLink` public in `TripDetailViewModel` and updated `CalendarItineraryView` to display navigation links.

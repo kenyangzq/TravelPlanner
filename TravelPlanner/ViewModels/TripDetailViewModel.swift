@@ -106,7 +106,7 @@ final class TripDetailViewModel {
 
     // MARK: - Navigation Link Generation
 
-    private func buildNavigationLink(from: TripEvent, to: TripEvent) -> EventNavigationLink? {
+    func buildNavigationLink(from: TripEvent, to: TripEvent) -> EventNavigationLink? {
         // Skip navigation link between a hotel and itself (or two hotels)
         if from is HotelEvent && to is HotelEvent {
             return nil
