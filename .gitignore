@@ -29,6 +29,9 @@ Pods/
 !default.mode2v3
 !default.perspectivev3
 
+# API Keys / Secrets
+TravelPlanner/Utilities/Secrets.swift
+
 # Temporary files
 *.hmap
 *.ipa
