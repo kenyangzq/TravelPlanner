@@ -9,23 +9,36 @@ struct RestaurantFormView: View {
     @State private var formVM = EventFormViewModel()
 
     @State private var restaurantName: String
-    @State private var cuisineType: String
     @State private var reservationDate: Date
-    @State private var endDate: Date
+    @State private var durationIn15Min: Int // duration in 15-minute increments
     @State private var partySize: Int
-    @State private var confirmationNumber: String
     @State private var notes: String
+
+    static let durationOptions: [(label: String, value: Int)] = [
+        ("30 min", 2), ("45 min", 3), ("1 hr", 4), ("1 hr 15 min", 5),
+        ("1 hr 30 min", 6), ("1 hr 45 min", 7), ("2 hr", 8), ("2 hr 30 min", 10),
+        ("3 hr", 12), ("4 hr", 16)
+    ]
 
     init(trip: Trip, existingEvent: RestaurantEvent? = nil) {
         self.trip = trip
         self.existingEvent = existingEvent
         _restaurantName = State(initialValue: existingEvent?.restaurantName ?? "")
-        _cuisineType = State(initialValue: existingEvent?.cuisineType ?? "")
         _reservationDate = State(initialValue: existingEvent?.reservationTime ?? trip.startDate)
-        _endDate = State(initialValue: existingEvent?.endDate ?? Calendar.current.date(byAdding: .hour, value: 2, to: trip.startDate) ?? trip.startDate)
+        let existingDuration: Int
+        if let existing = existingEvent {
+            let minutes = Int(existing.endDate.timeIntervalSince(existing.startDate) / 60)
+            existingDuration = max(2, minutes / 15)
+        } else {
+            existingDuration = 8 // default 2 hours
+        }
+        _durationIn15Min = State(initialValue: existingDuration)
         _partySize = State(initialValue: existingEvent?.partySize ?? 2)
-        _confirmationNumber = State(initialValue: existingEvent?.confirmationNumber ?? "")
         _notes = State(initialValue: existingEvent?.notes ?? "")
+    }
+
+    private var endDate: Date {
+        Calendar.current.date(byAdding: .minute, value: durationIn15Min * 15, to: reservationDate) ?? reservationDate
     }
 
     var body: some View {
@@ -57,11 +70,7 @@ struct RestaurantFormView: View {
                     .disabled(formVM.isGeocoding)
                 }
 
-                TextField("Cuisine Type (e.g. Italian, Japanese)", text: $cuisineType)
-
                 Stepper("Party Size: \(partySize)", value: $partySize, in: 1...20)
-
-                TextField("Confirmation Number", text: $confirmationNumber)
             }
 
             // Search results dropdown
@@ -146,7 +155,12 @@ struct RestaurantFormView: View {
 
             Section("Reservation") {
                 DatePicker("Date & Time", selection: $reservationDate)
-                DatePicker("End Time", selection: $endDate, in: reservationDate...)
+
+                Picker("Duration", selection: $durationIn15Min) {
+                    ForEach(Self.durationOptions, id: \.value) { option in
+                        Text(option.label).tag(option.value)
+                    }
+                }
             }
 
             Section("Notes") {
@@ -170,19 +184,17 @@ struct RestaurantFormView: View {
 
         if let existing = existingEvent {
             existing.restaurantName = trimmedName
-            existing.cuisineType = cuisineType.trimmingCharacters(in: .whitespacesAndNewlines)
             existing.reservationTime = reservationDate
             existing.partySize = partySize
-            existing.confirmationNumber = confirmationNumber
             existing.title = trimmedName
             existing.startDate = reservationDate
             existing.endDate = endDate
             existing.notes = notes
-            existing.locationName = trimmedName
 
             if formVM.selectedResult != nil {
                 formVM.applyToRestaurant(existing)
-            } else if !trimmedName.isEmpty {
+            } else if existing.restaurantLatitude == nil, !trimmedName.isEmpty {
+                // Only geocode if no coordinates exist yet
                 await formVM.geocodeRestaurant(existing, destination: trip.destination)
             }
             try? modelContext.save()
@@ -191,10 +203,8 @@ struct RestaurantFormView: View {
                 restaurantName: trimmedName,
                 reservationTime: reservationDate,
                 endTime: endDate,
-                cuisineType: cuisineType.trimmingCharacters(in: .whitespacesAndNewlines),
                 partySize: partySize
             )
-            restaurant.confirmationNumber = confirmationNumber
             restaurant.notes = notes
 
             if formVM.selectedResult != nil {

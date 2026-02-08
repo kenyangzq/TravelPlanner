@@ -15,12 +15,6 @@ struct RestaurantEventRow: View {
                     Text(restaurant.restaurantName.isEmpty ? "Restaurant" : restaurant.restaurantName)
                         .font(.subheadline)
                         .fontWeight(.semibold)
-
-                    if !restaurant.cuisineType.isEmpty {
-                        Text("- \(restaurant.cuisineType)")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
                     Spacer()
                 }
 
@@ -42,11 +36,11 @@ struct RestaurantEventRow: View {
                     }
                 }
 
-                if !restaurant.confirmationNumber.isEmpty {
+                if !restaurant.restaurantAddress.isEmpty {
                     HStack(spacing: 4) {
-                        Image(systemName: "number")
+                        Image(systemName: "mappin")
                             .font(.caption2)
-                        Text(restaurant.confirmationNumber)
+                        Text(restaurant.restaurantAddress)
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }

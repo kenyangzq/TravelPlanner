@@ -10,20 +10,35 @@ struct ActivityFormView: View {
 
     @State private var title: String
     @State private var activityDate: Date
-    @State private var endDate: Date
-    @State private var hasEndDate: Bool
+    @State private var durationIn15Min: Int // duration in 15-minute increments
     @State private var locationName: String
     @State private var description: String
+
+    static let durationOptions: [(label: String, value: Int)] = [
+        ("30 min", 2), ("45 min", 3), ("1 hr", 4), ("1 hr 15 min", 5),
+        ("1 hr 30 min", 6), ("1 hr 45 min", 7), ("2 hr", 8), ("2 hr 30 min", 10),
+        ("3 hr", 12), ("4 hr", 16), ("5 hr", 20), ("6 hr", 24), ("8 hr", 32)
+    ]
 
     init(trip: Trip, existingEvent: ActivityEvent? = nil) {
         self.trip = trip
         self.existingEvent = existingEvent
         _title = State(initialValue: existingEvent?.title ?? "")
         _activityDate = State(initialValue: existingEvent?.startDate ?? trip.startDate)
-        _endDate = State(initialValue: existingEvent?.endDate ?? trip.startDate)
-        _hasEndDate = State(initialValue: existingEvent != nil && existingEvent!.startDate != existingEvent!.endDate)
+        let existingDuration: Int
+        if let existing = existingEvent, existing.startDate != existing.endDate {
+            let minutes = Int(existing.endDate.timeIntervalSince(existing.startDate) / 60)
+            existingDuration = max(2, minutes / 15)
+        } else {
+            existingDuration = 4 // default 1 hour
+        }
+        _durationIn15Min = State(initialValue: existingDuration)
         _locationName = State(initialValue: existingEvent?.activityLocationName ?? "")
         _description = State(initialValue: existingEvent?.activityDescription ?? "")
+    }
+
+    private var endDate: Date {
+        Calendar.current.date(byAdding: .minute, value: durationIn15Min * 15, to: activityDate) ?? activityDate
     }
 
     var body: some View {
@@ -37,10 +52,10 @@ struct ActivityFormView: View {
             Section("Date & Time") {
                 DatePicker("Start", selection: $activityDate)
 
-                Toggle("Has End Time", isOn: $hasEndDate)
-
-                if hasEndDate {
-                    DatePicker("End", selection: $endDate, in: activityDate...)
+                Picker("Duration", selection: $durationIn15Min) {
+                    ForEach(Self.durationOptions, id: \.value) { option in
+                        Text(option.label).tag(option.value)
+                    }
                 }
             }
 
@@ -170,14 +185,14 @@ struct ActivityFormView: View {
         if let existing = existingEvent {
             existing.title = trimmedTitle
             existing.startDate = activityDate
-            existing.endDate = hasEndDate ? endDate : activityDate
+            existing.endDate = endDate
             existing.activityLocationName = trimmedLocation
             existing.activityDescription = description.trimmingCharacters(in: .whitespacesAndNewlines)
             existing.locationName = trimmedLocation
 
             if formVM.selectedResult != nil {
                 formVM.applyToActivity(existing)
-            } else if !trimmedLocation.isEmpty {
+            } else if existing.activityLatitude == nil, !trimmedLocation.isEmpty {
                 await formVM.geocodeActivity(existing, destination: trip.destination)
             }
             try? modelContext.save()
@@ -185,7 +200,7 @@ struct ActivityFormView: View {
             let activity = ActivityEvent(
                 title: trimmedTitle,
                 date: activityDate,
-                endDate: hasEndDate ? endDate : nil,
+                endDate: endDate,
                 locationName: trimmedLocation,
                 description: description.trimmingCharacters(in: .whitespacesAndNewlines)
             )

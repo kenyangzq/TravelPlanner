@@ -25,6 +25,18 @@ struct TripRowView: View {
                 }
             }
 
+            if !trip.cities.isEmpty {
+                HStack(spacing: 4) {
+                    Image(systemName: "building.2")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(trip.cities.joined(separator: ", "))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+            }
+
             HStack(spacing: 4) {
                 Image(systemName: "calendar")
                     .font(.caption)

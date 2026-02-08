@@ -168,7 +168,8 @@ struct HotelFormView: View {
 
             if formVM.selectedResult != nil {
                 formVM.applyToHotel(existing)
-            } else if !trimmedName.isEmpty {
+            } else if existing.hotelLatitude == nil, !trimmedName.isEmpty {
+                // Only geocode if no coordinates exist yet
                 await formVM.geocodeHotel(existing, destination: trip.destination)
             }
             try? modelContext.save()

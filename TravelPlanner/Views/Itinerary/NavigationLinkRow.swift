@@ -5,50 +5,51 @@ struct NavigationLinkRow: View {
 
     var body: some View {
         if let url = link.directionsURL {
-            HStack(spacing: 8) {
-                // Dotted connector line
-                VStack(spacing: 2) {
-                    ForEach(0..<3, id: \.self) { _ in
-                        Circle()
-                            .fill(.secondary.opacity(0.4))
-                            .frame(width: 3, height: 3)
+            Link(destination: url) {
+                HStack(spacing: 10) {
+                    // Dotted connector line
+                    VStack(spacing: 3) {
+                        ForEach(0..<3, id: \.self) { _ in
+                            Circle()
+                                .fill(.secondary.opacity(0.4))
+                                .frame(width: 4, height: 4)
+                        }
                     }
-                }
-                .frame(width: 36)
+                    .frame(width: 36)
 
-                // Direction info
-                VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: 4) {
-                        Text(link.fromLabel)
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                        Image(systemName: "arrow.right")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                        Text(link.toLabel)
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
+                    // Direction info
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack(spacing: 4) {
+                            Text(link.fromLabel)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Image(systemName: "arrow.right")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Text(link.toLabel)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
                     }
-                }
 
-                Spacer()
+                    Spacer()
 
-                // Navigate button
-                Link(destination: url) {
-                    HStack(spacing: 4) {
+                    // Navigate button
+                    HStack(spacing: 5) {
                         Image(systemName: "arrow.triangle.turn.up.right.circle.fill")
-                            .font(.caption)
+                            .font(.subheadline)
                         Text("Navigate")
-                            .font(.caption)
+                            .font(.subheadline)
                             .fontWeight(.medium)
                     }
                     .foregroundStyle(.white)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
                     .background(.blue, in: Capsule())
                 }
+                .padding(.vertical, 6)
+                .contentShape(Rectangle())
             }
-            .padding(.vertical, 2)
         }
     }
 }

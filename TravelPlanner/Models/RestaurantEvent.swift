@@ -17,12 +17,10 @@ final class RestaurantEvent: TripEvent {
         restaurantName: String,
         reservationTime: Date,
         endTime: Date? = nil,
-        cuisineType: String = "",
         partySize: Int = 2,
         address: String = ""
     ) {
         self.restaurantName = restaurantName
-        self.cuisineType = cuisineType
         self.reservationTime = reservationTime
         self.partySize = partySize
         self.restaurantAddress = address

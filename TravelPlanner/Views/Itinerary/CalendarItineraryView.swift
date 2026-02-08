@@ -10,6 +10,11 @@ struct CalendarItineraryView: View {
     private let startHour = 0
     private let endHour = 24
 
+    /// All hotels in the trip, for finding active hotel per day.
+    private var hotels: [HotelEvent] {
+        trip.events.compactMap { $0 as? HotelEvent }
+    }
+
     var body: some View {
         let dayGroups = viewModel.eventsByDay(for: trip)
 
@@ -38,9 +43,9 @@ struct CalendarItineraryView: View {
 
     private var timeLabelsColumn: some View {
         VStack(spacing: 0) {
-            // Header spacer for day title
+            // Header spacer for day title + hotel banner
             Text("")
-                .frame(height: 44)
+                .frame(height: 76)
 
             ScrollView(.vertical, showsIndicators: false) {
                 ZStack(alignment: .topLeading) {
@@ -65,7 +70,11 @@ struct CalendarItineraryView: View {
     // MARK: - Day Column
 
     private func dayColumn(date: Date, items: [ItineraryItem]) -> some View {
-        VStack(spacing: 0) {
+        // Filter out hotel events from time blocks
+        let nonHotelItems = items.filter { !($0.event is HotelEvent) }
+        let activeHotel = findHotel(for: date)
+
+        return VStack(spacing: 0) {
             // Day header
             VStack(spacing: 2) {
                 Text(dayAbbrev(date))
@@ -84,7 +93,34 @@ struct CalendarItineraryView: View {
             }
             .frame(height: 44)
 
-            // Event blocks
+            // Hotel banner
+            if let hotel = activeHotel {
+                Button {
+                    onEditEvent(hotel)
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "building.2.fill")
+                            .font(.system(size: 10))
+                        Text(hotel.hotelName)
+                            .font(.system(size: 11))
+                            .fontWeight(.medium)
+                            .lineLimit(1)
+                    }
+                    .foregroundStyle(.purple)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 6)
+                    .frame(maxWidth: .infinity)
+                    .background(.purple.opacity(0.15), in: RoundedRectangle(cornerRadius: 6))
+                }
+                .tint(.purple)
+                .padding(.horizontal, 3)
+                .frame(height: 32)
+            } else {
+                Spacer()
+                    .frame(height: 32)
+            }
+
+            // Event blocks (non-hotel only)
             ScrollView(.vertical, showsIndicators: false) {
                 ZStack(alignment: .topLeading) {
                     // Hour grid lines
@@ -98,7 +134,7 @@ struct CalendarItineraryView: View {
                     }
 
                     // Event blocks
-                    ForEach(items) { item in
+                    ForEach(nonHotelItems) { item in
                         eventBlock(event: item.event)
                     }
                 }
@@ -161,6 +197,14 @@ struct CalendarItineraryView: View {
     }
 
     // MARK: - Helpers
+
+    /// Find the hotel that covers a given date.
+    private func findHotel(for date: Date) -> HotelEvent? {
+        let day = date.startOfDay
+        return hotels.first { hotel in
+            hotel.checkInDate.startOfDay <= day && day < hotel.checkOutDate.startOfDay
+        }
+    }
 
     private func minutesSinceStartOfDay(_ date: Date) -> Int {
         let calendar = Calendar.current

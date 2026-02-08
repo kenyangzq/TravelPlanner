@@ -9,10 +9,17 @@ struct EventNavigationLink {
     let directionsURL: URL?
 }
 
+struct HotelDirectionsLink {
+    let hotelName: String
+    let toHotelURL: URL?
+    let fromHotelURL: URL?
+}
+
 struct ItineraryItem: Identifiable {
     var id: UUID { event.id }
     let event: TripEvent
     let navigationLink: EventNavigationLink?
+    let hotelLink: HotelDirectionsLink?
 }
 
 @Observable
@@ -45,6 +52,9 @@ final class TripDetailViewModel {
         let sorted = trip.sortedEvents
         var items: [ItineraryItem] = []
 
+        // Collect all hotels for hotel link generation
+        let hotels = sorted.compactMap { $0 as? HotelEvent }
+
         for (index, event) in sorted.enumerated() {
             var navLink: EventNavigationLink? = nil
 
@@ -53,7 +63,15 @@ final class TripDetailViewModel {
                 navLink = buildNavigationLink(from: event, to: nextEvent)
             }
 
-            items.append(ItineraryItem(event: event, navigationLink: navLink))
+            // Build hotel directions link for non-hotel events
+            let hotelLink: HotelDirectionsLink?
+            if event is HotelEvent {
+                hotelLink = nil
+            } else {
+                hotelLink = buildHotelLink(for: event, hotels: hotels)
+            }
+
+            items.append(ItineraryItem(event: event, navigationLink: navLink, hotelLink: hotelLink))
         }
 
         return items
@@ -79,10 +97,17 @@ final class TripDetailViewModel {
     // MARK: - Navigation Link Generation
 
     private func buildNavigationLink(from: TripEvent, to: TripEvent) -> EventNavigationLink? {
+        // Skip navigation link between a hotel and itself (or two hotels)
+        if from is HotelEvent && to is HotelEvent {
+            return nil
+        }
+
         let fromCoord = extractEndCoordinate(from: from)
         let toCoord = extractStartCoordinate(from: to)
         let fromLabel = extractEndLabel(from: from)
         let toLabel = extractStartLabel(from: to)
+        let fromQuery = extractEndLocationName(from: from)
+        let toQuery = extractStartLocationName(from: to)
 
         var url: URL? = nil
 
@@ -92,13 +117,21 @@ final class TripDetailViewModel {
                 fromLat: fromCoord.lat, fromLng: fromCoord.lng,
                 toLat: toCoord.lat, toLng: toCoord.lng
             )
-        } else {
-            // Use name-based Google Maps directions as fallback
-            let fromQuery = extractEndLocationName(from: from)
-            let toQuery = extractStartLocationName(from: to)
-            if !fromQuery.isEmpty && !toQuery.isEmpty {
-                url = GoogleMapsService.directionsURLByName(origin: fromQuery, destination: toQuery)
-            }
+        } else if let fromCoord, !toQuery.isEmpty {
+            // Origin has coords, destination is name-based
+            url = GoogleMapsService.directionsURLByName(
+                origin: "\(fromCoord.lat),\(fromCoord.lng)",
+                destination: toQuery
+            )
+        } else if !fromQuery.isEmpty, let toCoord {
+            // Origin is name-based, destination has coords
+            url = GoogleMapsService.directionsURLByName(
+                origin: fromQuery,
+                destination: "\(toCoord.lat),\(toCoord.lng)"
+            )
+        } else if !fromQuery.isEmpty && !toQuery.isEmpty {
+            // Both name-based
+            url = GoogleMapsService.directionsURLByName(origin: fromQuery, destination: toQuery)
         }
 
         // Only show link if we have a URL
@@ -243,5 +276,64 @@ final class TripDetailViewModel {
         default:
             return event.locationName.isEmpty ? event.title : event.locationName
         }
+    }
+
+    // MARK: - Hotel Directions
+
+    /// Find the hotel that covers a given date (check-in <= date < check-out).
+    private func findHotel(for date: Date, in hotels: [HotelEvent]) -> HotelEvent? {
+        hotels.first { hotel in
+            let day = date.startOfDay
+            return hotel.checkInDate.startOfDay <= day && day < hotel.checkOutDate.startOfDay
+        }
+    }
+
+    /// Build directions links to/from the hotel for a non-hotel event.
+    private func buildHotelLink(for event: TripEvent, hotels: [HotelEvent]) -> HotelDirectionsLink? {
+        // Skip hotel links for flights — flights have their own airport navigation
+        if event is FlightEvent { return nil }
+
+        guard let hotel = findHotel(for: event.startDate, in: hotels) else { return nil }
+
+        let hotelCoord: (lat: Double, lng: Double)?
+        if let lat = hotel.hotelLatitude, let lng = hotel.hotelLongitude {
+            hotelCoord = (lat, lng)
+        } else {
+            hotelCoord = nil
+        }
+
+        // Use the event's actual location coordinates
+        let eventCoord = extractEndCoordinate(from: event)
+        let hotelName = hotel.hotelName.isEmpty ? "Hotel" : hotel.hotelName
+        let eventName = extractEndLocationName(from: event)
+
+        var toHotelURL: URL?
+        var fromHotelURL: URL?
+
+        if let ec = eventCoord, let hc = hotelCoord {
+            // Both have coordinates
+            toHotelURL = GoogleMapsService.directionsURL(fromLat: ec.lat, fromLng: ec.lng, toLat: hc.lat, toLng: hc.lng)
+            fromHotelURL = GoogleMapsService.directionsURL(fromLat: hc.lat, fromLng: hc.lng, toLat: ec.lat, toLng: ec.lng)
+        } else if let ec = eventCoord, !hotelName.isEmpty {
+            // Event has coords, hotel name-based
+            toHotelURL = GoogleMapsService.directionsURLByName(origin: "\(ec.lat),\(ec.lng)", destination: hotelName)
+            fromHotelURL = GoogleMapsService.directionsURLByName(origin: hotelName, destination: "\(ec.lat),\(ec.lng)")
+        } else if !eventName.isEmpty, let hc = hotelCoord {
+            // Event name-based, hotel has coords
+            toHotelURL = GoogleMapsService.directionsURLByName(origin: eventName, destination: "\(hc.lat),\(hc.lng)")
+            fromHotelURL = GoogleMapsService.directionsURLByName(origin: "\(hc.lat),\(hc.lng)", destination: eventName)
+        } else if !eventName.isEmpty && !hotelName.isEmpty {
+            // Both name-based
+            toHotelURL = GoogleMapsService.directionsURLByName(origin: eventName, destination: hotelName)
+            fromHotelURL = GoogleMapsService.directionsURLByName(origin: hotelName, destination: eventName)
+        }
+
+        guard toHotelURL != nil || fromHotelURL != nil else { return nil }
+
+        return HotelDirectionsLink(
+            hotelName: hotelName,
+            toHotelURL: toHotelURL,
+            fromHotelURL: fromHotelURL
+        )
     }
 }
