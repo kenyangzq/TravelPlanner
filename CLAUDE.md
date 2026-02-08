@@ -2,6 +2,7 @@
 
 ## Rules
 - **Always update this CLAUDE.md file immediately after making any changes** to reflect the current state of the codebase. This includes bug fixes, new features, refactoring, or any other code changes.
+- **Do NOT commit and push changes until explicitly asked** by the user.
 
 ## Project Overview
 iOS travel planning app built with SwiftUI targeting iOS 26. Allows users to create trip itineraries with flights, car rentals, hotels, restaurants, and activities. Features automatic Google Maps navigation links between consecutive events, day-level hotel header with navigation to first event, calendar view with hotels on all covered dates, tap-to-edit, and location finding via MKLocalSearch with Google Maps integration.
@@ -97,5 +98,6 @@ TravelPlanner/
 - `Secrets.swift` is gitignored — each developer must create their own
 
 ## Recent Changes
+- **2025-02-08**: Updated rules to clarify that commits and pushes should only be done when explicitly asked by the user.
 - **2025-02-08**: Fixed hotel map link button not clickable - removed `.contentShape(Rectangle())` and changed to `.simultaneousGesture` in `ItineraryDaySection` to allow map button taps while preserving tap-to-edit on row.
 - **2025-02-08**: Fixed hotel-to-restaurant navigation links - calendar view now shows navigation links between events and from hotel banners to first event of each day. Made `buildNavigationLink` public in `TripDetailViewModel` and updated `CalendarItineraryView` to display navigation links.

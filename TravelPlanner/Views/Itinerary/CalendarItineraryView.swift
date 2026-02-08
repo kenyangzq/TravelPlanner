@@ -185,8 +185,9 @@ struct CalendarItineraryView: View {
 
                         // Navigation to first event
                         if let firstEvent = findFirstNonHotelEvent(for: date),
-                           let navLink = viewModel.buildNavigationLink(from: hotel, to: firstEvent) {
-                            Link(destination: navLink.directionsURL) {
+                           let navLink = viewModel.buildNavigationLink(from: hotel, to: firstEvent),
+                           let url = navLink.directionsURL {
+                            Link(destination: url) {
                                 HStack(spacing: 2) {
                                     Image(systemName: "arrow.triangle.turn.up.right.circle.fill")
                                         .font(.system(size: 8))
@@ -252,11 +253,11 @@ struct CalendarItineraryView: View {
                 }
 
                 // Navigation link (if available)
-                if let navLink = item.navigationLink {
+                if let navLink = item.navigationLink, let url = navLink.directionsURL {
                     Divider()
                         .padding(.horizontal, 4)
 
-                    Link(destination: navLink.directionsURL) {
+                    Link(destination: url) {
                         HStack(spacing: 4) {
                             Image(systemName: "arrow.triangle.turn.up.right.circle.fill")
                                 .font(.system(size: 9))
