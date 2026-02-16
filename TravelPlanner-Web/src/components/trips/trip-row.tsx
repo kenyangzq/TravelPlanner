@@ -6,7 +6,7 @@
 
 import * as React from "react";
 import { format, differenceInDays, parseISO } from "date-fns";
-import { MapPin, Calendar, MoreHoriz, Flight, Hotel, Activity } from "lucide-react";
+import { MapPin, Calendar, MoreHorizontal, Plane, Hotel, Activity } from "lucide-react";
 
 interface TripRowProps {
   trip: {
@@ -97,7 +97,7 @@ export const TripRow: React.FC<TripRowProps> = ({
             }}
             className="text-slate-400 hover:text-primary transition-colors"
           >
-            <MoreHoriz className="w-5 h-5" />
+            <MoreHorizontal className="w-5 h-5" />
           </button>
         </div>
 
@@ -105,7 +105,7 @@ export const TripRow: React.FC<TripRowProps> = ({
         <div className="flex flex-wrap gap-2">
           {flightCount > 0 && (
             <span className="px-3 py-1 bg-primary/5 text-primary text-xs font-semibold rounded-full flex items-center gap-1">
-              <Flight className="w-3 h-3" /> {flightCount} Flight{flightCount > 1 ? "s" : ""}
+              <Plane className="w-3 h-3" /> {flightCount} Flight{flightCount > 1 ? "s" : ""}
             </span>
           )}
           {hotelCount > 0 && (

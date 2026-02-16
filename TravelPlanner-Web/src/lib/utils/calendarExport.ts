@@ -110,7 +110,7 @@ function generateEventLocation(event: TripEvent): string {
   } else if (isCarRentalEvent(event)) {
     return event.pickupLocationName || event.locationName;
   }
-  return event.locationName;
+  return "";
 }
 
 /**

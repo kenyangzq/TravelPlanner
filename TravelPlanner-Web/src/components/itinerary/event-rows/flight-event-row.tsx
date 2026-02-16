@@ -100,7 +100,7 @@ export const FlightEventRow: React.FC<FlightEventRowProps> = ({
           onClick={(e) => e.stopPropagation()}
         >
           <MapPin className="w-4 h-4" />
-          {item.navigationToDeparture.durationLabel || `Navigate to ${event.departureAirportName}`}
+          {item.navigationToDeparture.destinationLabel || `Navigate to ${event.departureAirportName}`}
           <ExternalLink className="w-3 h-3" />
         </a>
       )}

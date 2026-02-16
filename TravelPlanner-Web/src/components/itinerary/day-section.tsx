@@ -134,14 +134,21 @@ export const DaySection: React.FC<DaySectionProps> = ({
               </div>
 
               {/* Navigation link to next event */}
-              {item.navigationLink && (
+              {item.navigationToEvent && item.navigationToEvent.directionsURL && (
                 <div className="relative pl-8 pb-10">
-                  <div className="flex items-center gap-2 cursor-pointer text-primary hover:underline">
+                  <a
+                    href={item.navigationToEvent.directionsURL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 cursor-pointer text-primary hover:underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <MapPin className="w-4 h-4" />
                     <span className="text-xs font-bold">
-                      {item.navigationLink.durationLabel || "Navigate to next event"}
+                      {item.navigationToEvent.destinationLabel || "Navigate to next event"}
                     </span>
-                  </div>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
                 </div>
               )}
             </React.Fragment>

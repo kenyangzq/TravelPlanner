@@ -2,6 +2,7 @@
 
 ## Rules
 - **Always update this CLAUDE.md file immediately after making any changes** to reflect the current state of the codebase. This includes bug fixes, new features, refactoring, or any other code changes.
+- **Always append to HISTORY.md** after completing any task — see HISTORY.md for format. This file is append-only (newest entries at the top).
 - **Do NOT commit and push changes until explicitly asked** by the user.
 - **Do NOT build the project unless explicitly asked** by the user. Just make the code changes and inform the user when complete.
 
@@ -151,14 +152,14 @@ TravelPlanner-Web/
 ├── public/
 │   └── icons/                            # PWA icons
 ├── package.json
-├── next.config.js                        # PWA + static export config
+├── next.config.js                        # PWA config
 ├── tailwind.config.ts
 ├── tsconfig.json
 └── .env.local                            # NEXT_PUBLIC_RAPIDAPI_KEY
 ```
 
 ### Key Architecture Decisions (Web)
-- **Static export**: Uses `output: 'export'` in next.config.js to generate static HTML/JS/CSS in `out/` directory. No server-side rendering or API routes. Required for Azure Static Web Apps deployment.
+- **Azure SWA hybrid rendering**: Uses Next.js default build (no `output: 'export'`) with Azure Static Web Apps' built-in Next.js hybrid rendering support. SWA auto-detects `.next/` output and handles dynamic routes via managed functions. `staticwebapp.config.json` provides navigation fallback for client-side routing.
 - **Discriminated unions**: Unlike iOS class inheritance, web uses TypeScript discriminated unions with `eventType` field to differentiate event types
 - **IndexedDB persistence**: All data stored locally in browser via Dexie.js, no server database required
 - **State separation**: Data state (Dexie) separate from UI state (Zustand) - mirrors iOS SwiftData + @Observable pattern
@@ -201,21 +202,5 @@ See `TravelPlanner-Web/DEPLOYMENT.md` for comprehensive Azure deployment guide, 
 | SwiftUI NavigationStack | Next.js App Router |
 | Sheet presentation | Dialog/Modal components |
 
-### Web App Recent Changes
-- **2026-02-15**: Switched to static export (`output: 'export'`) for Azure Static Web Apps compatibility. Moved flight API from server-side API route to client-side direct calls via `NEXT_PUBLIC_RAPIDAPI_KEY`. Deleted `/api/flights/route.ts`. Updated GitHub Actions workflow to use `out/` output directory. Updated eslint-config-next to match next version, removed `@types/uuid`.
-- **2026-02-15**: Complete PWA implementation - ported all iOS features to Next.js/React with TypeScript. Includes trip management, 5 event types, location search with city biasing, flight API integration, calendar view with time-positioned events, and PWA configuration for iPhone installation.
-- **2026-02-15**: Improved location search with city-based bounding box biasing - now uses Nominatim viewbox parameter to prioritize results within ~50km of trip cities, with deduplication by coordinate proximity (~100m) and sorting by importance.
-- **2026-02-15**: Fixed calendar view to display flight events with plane icons at actual time positions - events now show in correct time slots (6 AM - 11 PM) with color-coded backgrounds by event type and proper flight indicators.
-- **2026-02-15**: Fixed edit dialog stretching full width on desktop - added `sm:max-w-lg` to dialog container in `dialog.tsx` so modals are properly constrained on larger screens while remaining full-width bottom sheets on mobile.
-
-## Recent Changes (iOS)
-- **2026-02-15**: Created companion web app (PWA) version in TravelPlanner-Web/ directory with full feature parity to iOS app. See [Web App Implementation](#web-app-implementation) section above for details.
-- **2025-02-08**: Switched from Google Maps to Apple Maps for navigation - much more reliable on iOS. Created `MapsService` with Apple Maps URL format (`maps.apple.com`). Updated all navigation to use Apple Maps. Coordinates are still prioritized over addresses for accuracy. Removed `comgooglemaps` URL scheme from build settings.
-- **2025-02-08**: Improved time picker UX - made `MinuteIntervalDatePicker` collapsible. Shows compact time display by default and expands to full picker wheels on tap, saving vertical space in event forms. Picker uses UIKit's `UIDatePicker` with `minuteInterval = 15` for 15-minute increments.
-- **2025-02-08**: Fixed Google Maps navigation links to open directly in the Google Maps app - removed `canOpenURL` checks and web URL fallbacks. All navigation now uses `comgooglemaps://` URL scheme directly, letting iOS handle the fallback if Google Maps is not installed.
-- **2025-02-08**: Fixed hotel navigation link issue - added new mixed-mode URL generation methods `directionsURLFromNameToCoords` and `directionsURLFromCoordsToName` to `GoogleMapsService` for proper navigation when one event has coordinates and the other doesn't.
-- **2025-02-08**: Added back-to-hotel navigation - last non-hotel event of each day now shows navigation link back to the day's hotel. If multiple hotels exist on the same day, uses the latest hotel (by check-in date). Updated `ItineraryItem` struct to include `navigationToHotel` property and modified both list and calendar views to display these links.
-- **2025-02-08**: Fixed calendar view hotel banner to show on check-out date - changed `findHotels(for:)` comparison from `<` to `<=` for check-out date so hotel banners now appear on both check-in and check-out dates.
-- **2025-02-08**: Updated rules to clarify that commits and pushes should only be done when explicitly asked by the user.
-- **2025-02-08**: Fixed hotel map link button not clickable - removed `.contentShape(Rectangle())` and changed to `.simultaneousGesture` in `ItineraryDaySection` to allow map button taps while preserving tap-to-edit on row.
-- **2025-02-08**: Fixed hotel-to-restaurant navigation links - calendar view now shows navigation links between events and from hotel banners to first event of each day. Made `buildNavigationLink` public in `TripDetailViewModel` and updated `CalendarItineraryView` to display navigation links.
+## Change History
+See [HISTORY.md](HISTORY.md) for the full changelog.
