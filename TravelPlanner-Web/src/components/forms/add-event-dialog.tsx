@@ -18,14 +18,7 @@ import {
 import { Button } from "../ui/button";
 import { useEvents } from "@/lib/hooks/useEvents";
 import { useUIStore } from "@/lib/store";
-import {
-  Plane,
-  Car,
-  Building2,
-  Utensils,
-  Star,
-  X,
-} from "lucide-react";
+import { X } from "lucide-react";
 import { FlightForm } from "./flight-form";
 import { HotelForm } from "./hotel-form";
 import { RestaurantForm } from "./restaurant-form";
@@ -65,58 +58,55 @@ export const AddEventDialog: React.FC<AddEventDialogProps> = ({ tripId, trip }) 
     }
   };
 
-  // Event type options
+  // Event type options for horizontal tabs
   const eventTypes = [
-    { value: "flight" as const, label: "Flight", icon: Plane },
-    { value: "carRental" as const, label: "Car Rental", icon: Car },
-    { value: "hotel" as const, label: "Hotel", icon: Building2 },
-    { value: "restaurant" as const, label: "Restaurant", icon: Utensils },
-    { value: "activity" as const, label: "Activity", icon: Star },
+    { value: "flight" as const, label: "Flight", icon: "flight" },
+    { value: "hotel" as const, label: "Hotel", icon: "hotel" },
+    { value: "restaurant" as const, label: "Restaurant", icon: "restaurant" },
+    { value: "carRental" as const, label: "Car", icon: "directions_car" },
+    { value: "activity" as const, label: "Other", icon: "more_horiz" },
   ];
 
   return (
     <Dialog open={isAddEventOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-auto">
-        <DialogHeader>
+      <DialogContent className="w-full max-w-lg max-h-[90vh] overflow-auto p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center justify-between">
-            <DialogTitle>
-              {isEditing ? "Edit Event" : "Add Event"}
+            <DialogTitle className="text-xl font-bold text-slate-800 dark:text-white">
+              {isEditing ? "Edit Event" : "Add Event to Itinerary"}
             </DialogTitle>
             <button
               onClick={handleClose}
-              className="p-1 -mr-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+              className="p-2 -mr-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
         </DialogHeader>
 
-        <div className="py-4">
+        <div className="max-h-[85vh] overflow-y-auto p-6">
           {/* Event type selection (only when creating new event) */}
           {!isEditing && !eventType && (
-            <div className="space-y-2">
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                Select event type:
+            <div className="">
+              <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
+                What type of event?
               </p>
-              <div className="grid grid-cols-2 gap-2">
-                {eventTypes.map((type) => {
-                  const Icon = type.icon;
-                  return (
-                    <button
-                      key={type.value}
-                      type="button"
-                      onClick={() => setSelectedEventType(type.value)}
-                      className="flex flex-col items-center gap-2 p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                    >
-                      <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-full">
-                        <Icon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                      </div>
-                      <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                        {type.label}
-                      </span>
-                    </button>
-                  );
-                })}
+              <div className="flex items-center justify-between gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                {eventTypes.map((type) => (
+                  <button
+                    key={type.value}
+                    type="button"
+                    onClick={() => setSelectedEventType(type.value)}
+                    className={`flex-1 flex flex-col items-center gap-1 py-2 rounded-md transition-all ${
+                      eventType === type.value
+                        ? "bg-white dark:bg-primary text-primary dark:text-white shadow-sm"
+                        : "text-slate-500 hover:bg-white/50 dark:hover:bg-slate-700"
+                    }`}
+                  >
+                    <span className="material-icons text-xl">{type.icon}</span>
+                    <span className="text-xs font-semibold">{type.label}</span>
+                  </button>
+                ))}
               </div>
             </div>
           )}

@@ -58,9 +58,7 @@ export function useItineraryItems(tripId: string) {
       let navToDeparture: ItineraryItem["navigationToDeparture"] = null;
 
       // Navigation to event (from user's current location)
-      if (!isHotelEvent(event)) {
-        navToEvent = buildNavigationToEvent(event);
-      }
+      navToEvent = buildNavigationToEvent(event);
 
       // For flights: add navigation to departure airport
       if (isFlightEvent(event)) {
