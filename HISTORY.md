@@ -1,5 +1,29 @@
 # TravelPlanner Change History
 
+## 2026-02-15: Fix dev server with conditional static export configuration
+- Fixed Next.js dev server error where `"use client"` components couldn't export `generateStaticParams()` with static export
+- Split `trips/[tripId]/page.tsx` into server wrapper (exports `generateStaticParams()`) + client component (`_components/trip-detail-client.tsx`)
+- Made `output: 'export'` conditional on `NODE_ENV === 'production'` in `next.config.js`
+- Dev mode now uses Next.js hybrid rendering (no static export) for full dynamic routes support
+- Production builds still use static export to avoid Azure SWA warmup timeout on free tier
+- Files modified: `next.config.js`, `trips/[tripId]/page.tsx`
+- Files created: `trips/[tripId]/_components/trip-detail-client.tsx`
+
+## 2026-02-15: Switch to static export to fix Azure SWA warm-up timeout
+- Azure SWA deployment was failing with "Web app warm up timed out" due to SSR cold start on free tier
+- Added `output: 'export'` and `trailingSlash: true` to `next.config.js` for fully static HTML generation
+- Added `generateStaticParams` to `trips/[tripId]/page.tsx` returning placeholder `[{ tripId: '_' }]`
+- Added route rewrite rule in `staticwebapp.config.json`: `/trips/*` → `/trips/_/index.html`
+- Changed `output_location` from `""` to `"out"` in GitHub Actions workflow for static export output
+- Files modified: `next.config.js`, `trips/[tripId]/page.tsx`, `staticwebapp.config.json`, `.github/workflows/azure-static-web-apps-calm-ground-01e6aa11e.yml`
+
+## 2026-02-15: Add daily notes, list view timestamps, and fix calendar positioning
+- Fixed calendar view time positioning bug: events were rendered inside per-slot divs causing double offset (e.g., 7 PM event at 1664px instead of 832px). Moved event rendering to the day column div directly.
+- Added event start time labels to the left of timeline dots in list view (`day-section.tsx`). Widened timeline padding from `pl-4` to `pl-16` to accommodate time text.
+- Added daily notes/journal feature: new `DayNote` model in `models.ts`, `dayNotes` table in Dexie DB (version 2), `useDayNotes` hook, and inline note editing UI in day sections with auto-save.
+- Files modified: `calendar-view.tsx`, `day-section.tsx`, `list-view.tsx`, `models.ts`, `db.ts`
+- Files created: `useDayNotes.ts`
+
 ## 2026-02-15: Switch from static export to Azure SWA hybrid rendering
 - Removed `output: 'export'` from `next.config.js` — incompatible with runtime dynamic routes (IndexedDB trip IDs are only known at runtime, not build time)
 - Changed `output_location` from `"out"` to `""` in GitHub Actions workflow so Azure SWA auto-detects `.next/` output

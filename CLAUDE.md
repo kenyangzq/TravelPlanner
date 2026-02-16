@@ -132,7 +132,9 @@ TravelPlanner-Web/
 │   │   ├── manifest.ts                   # PWA manifest
 │   │   ├── trips/
 │   │   │   └── [tripId]/
-│   │   │       ├── page.tsx              # Itinerary (list + calendar toggle)
+│   │   │       ├── page.tsx              # Server wrapper (generateStaticParams)
+│   │   │       ├── _components/          # Client components
+│   │   │       │   └── trip-detail-client.tsx
 │   │   │       └── flights/
 │   │   │           └── [eventId]/
 │   │   │               └── page.tsx      # Flight detail
@@ -159,7 +161,8 @@ TravelPlanner-Web/
 ```
 
 ### Key Architecture Decisions (Web)
-- **Azure SWA hybrid rendering**: Uses Next.js default build (no `output: 'export'`) with Azure Static Web Apps' built-in Next.js hybrid rendering support. SWA auto-detects `.next/` output and handles dynamic routes via managed functions. `staticwebapp.config.json` provides navigation fallback for client-side routing.
+- **Conditional static export**: `next.config.js` uses `output: 'export'` only when `NODE_ENV === 'production'`. Dev mode uses Next.js hybrid rendering for full dynamic routes support. Production builds generate static HTML to avoid Azure SWA warm-up timeout on free tier.
+- **Server/client split for dynamic routes**: `trips/[tripId]/page.tsx` is a server component that exports `generateStaticParams()` with a placeholder `[{ tripId: '_' }]`. It renders `_components/trip-detail-client.tsx` which contains all client-side hooks and interactivity. SWA route rules in `staticwebapp.config.json` rewrite `/trips/*` to `/trips/_/index.html`, and client-side JS reads the real tripId from the URL.
 - **Discriminated unions**: Unlike iOS class inheritance, web uses TypeScript discriminated unions with `eventType` field to differentiate event types
 - **IndexedDB persistence**: All data stored locally in browser via Dexie.js, no server database required
 - **State separation**: Data state (Dexie) separate from UI state (Zustand) - mirrors iOS SwiftData + @Observable pattern
@@ -168,6 +171,9 @@ TravelPlanner-Web/
 - **Rate limiting**: Location search limited to 1 request per second (Nominatim policy)
 - **PWA installation**: Can be installed on iPhone via "Add to Home Screen" in Safari, runs in standalone mode
 - **Safe area handling**: CSS `env(safe-area-inset-*)` for iPhone notch/home indicator support
+- **Daily notes**: Per-day journal notes stored in `dayNotes` IndexedDB table (Dexie DB version 2), keyed by `[tripId+dayKey]`. Uses `useDayNotes` hook for live queries. Inline editing UI in day-section with auto-save on blur.
+- **List view timeline timestamps**: Event start times displayed as small labels to the left of timeline dots in the day section. Timeline uses `pl-16` padding with the line at `left-[3.25rem]`.
+- **Calendar view event positioning**: Events are rendered directly inside the day column div (not inside per-slot divs) using `position: absolute` with `top` calculated as `(startHour - 6) * 64px`.
 
 ### API Configuration (Web)
 - RapidAPI key stored in `.env.local` → `NEXT_PUBLIC_RAPIDAPI_KEY` (baked into client bundle at build time)
