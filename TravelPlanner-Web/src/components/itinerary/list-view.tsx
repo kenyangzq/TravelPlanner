@@ -5,12 +5,17 @@
  * Port of iOS ItineraryView.swift + ItineraryDaySection.swift.
  */
 
+"use client";
+
 import * as React from "react";
 import { format, parseISO } from "date-fns";
 import { DaySection } from "./day-section";
 import { EmptyState } from "../ui/empty-state";
 import { Calendar } from "lucide-react";
 import type { EventsByDayResult } from "@/lib/hooks/useTripDetail";
+import { useReminders } from "@/lib/hooks/useReminders";
+import { useTrips } from "@/lib/hooks/useTrips";
+import { parseCities } from "@/lib/models";
 
 interface ListViewProps {
   tripId: string;
@@ -25,6 +30,10 @@ export const ListView: React.FC<ListViewProps> = ({
   onEventClick,
   onDeleteEvent,
 }) => {
+  const { remindersByDay, saveReminder, deleteReminder } = useReminders(tripId);
+  const { trips } = useTrips();
+  const trip = trips.find((t) => t.id === tripId);
+  const tripCities = trip ? parseCities(trip.citiesRaw) : [];
   if (eventsByDay.length === 0) {
     return (
       <EmptyState
@@ -37,18 +46,25 @@ export const ListView: React.FC<ListViewProps> = ({
 
   return (
     <div>
-      {eventsByDay.map(({ date, items, dayHotel }, index) => (
-        <DaySection
-          key={date.toISOString()}
-          tripId={tripId}
-          date={date}
-          dayNumber={index + 1}
-          items={items}
-          dayHotel={dayHotel}
-          onEventClick={onEventClick}
-          onDeleteEvent={onDeleteEvent}
-        />
-      ))}
+      {eventsByDay.map(({ date, items, dayHotel }, index) => {
+        const dayKey = format(date, "yyyy-MM-dd");
+        return (
+          <DaySection
+            key={date.toISOString()}
+            tripId={tripId}
+            date={date}
+            dayNumber={index + 1}
+            items={items}
+            dayHotel={dayHotel}
+            reminder={remindersByDay.get(dayKey)}
+            tripCities={tripCities}
+            onEventClick={onEventClick}
+            onDeleteEvent={onDeleteEvent}
+            onSaveReminder={saveReminder}
+            onDeleteReminder={deleteReminder}
+          />
+        );
+      })}
     </div>
   );
 };

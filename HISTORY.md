@@ -1,5 +1,25 @@
 # TravelPlanner Change History
 
+## 2026-02-15: Hide map and reminder sidebar from list view
+- Map and reminder features remain implemented but are now hidden from UI per user request
+- Reverted day-section.tsx to single-column timeline layout
+- Removed two-column layout with map/reminder sidebar
+- Files modified: `day-section.tsx`
+
+## 2026-02-15: Rename daily notes to reminders and add day map view
+- Renamed DayNote model to Reminder (short notes instead of journal entries)
+- Added day map view to list view showing relevant locations for each day
+- Map uses Leaflet + OpenStreetMap (free, no API key required)
+- Hotels shown in purple, restaurants in red, flight airports in blue
+- Flight airports filtered by day's primary city (determined from hotel address or first trip city)
+- Added `extractDayMapLocations` helper to gather locations with city filtering
+- Changed reminder color from amber (notes) to blue for cleaner UI
+- Map auto-fits bounds to show all markers with location badges below
+- Updated database to version 3 with migration from dayNotes to reminders
+- Files modified: `models.ts`, `db.ts`, `day-section.tsx`, `list-view.tsx`
+- Files created: `useReminders.ts`, `day-map.tsx`
+- Files deleted: `useDayNotes.ts`
+
 ## 2026-02-15: Fix dev server with conditional static export configuration
 - Fixed Next.js dev server error where `"use client"` components couldn't export `generateStaticParams()` with static export
 - Split `trips/[tripId]/page.tsx` into server wrapper (exports `generateStaticParams()`) + client component (`_components/trip-detail-client.tsx`)

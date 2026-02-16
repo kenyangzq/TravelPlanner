@@ -15,6 +15,7 @@ import {
   RestaurantEvent,
   ActivityEvent,
   CarRentalEvent,
+  Reminder,
 } from "./models";
 
 /**
@@ -23,14 +24,39 @@ import {
 export class TravelPlannerDB extends Dexie {
   trips!: Table<Trip, string>;
   events!: Table<TripEvent, string>;
+  reminders!: Table<Reminder, string>;
 
   constructor() {
     super("TravelPlannerDB");
 
     // Define tables and indexes
     this.version(1).stores({
-      trips: "id, startDate, createdAt", // Indexed for sorting
-      events: "id, tripId, eventType, [tripId+startDate]", // Compound index for trip queries
+      trips: "id, startDate, createdAt",
+      events: "id, tripId, eventType, [tripId+startDate]",
+    });
+
+    this.version(2).stores({
+      trips: "id, startDate, createdAt",
+      events: "id, tripId, eventType, [tripId+startDate]",
+      dayNotes: "id, tripId, [tripId+dayKey]",
+    });
+
+    // Version 3: Rename dayNotes to reminders
+    this.version(3).stores({
+      trips: "id, startDate, createdAt",
+      events: "id, tripId, eventType, [tripId+startDate]",
+      reminders: "id, tripId, [tripId+dayKey]",
+    }).upgrade(tx => {
+      // Migrate data from dayNotes to reminders
+      return tx.table("dayNotes").toCollection().toArray((notes) => {
+        return tx.table("reminders").bulkAdd(notes.map(n => ({
+          id: n.id,
+          tripId: n.tripId,
+          dayKey: n.dayKey,
+          content: n.content,
+          updatedAt: n.updatedAt,
+        })));
+      });
     });
   }
 }
@@ -233,8 +259,9 @@ export const dbHelpers = {
    * Delete a trip and all its events (cascade)
    */
   async deleteTrip(id: string): Promise<void> {
-    await db.transaction("rw", [db.trips, db.events], async () => {
+    await db.transaction("rw", [db.trips, db.events, db.reminders], async () => {
       await db.events.where("tripId").equals(id).delete();
+      await db.reminders.where("tripId").equals(id).delete();
       await db.trips.delete(id);
     });
   },
@@ -295,5 +322,54 @@ export const dbHelpers = {
    */
   async getEvent(id: string): Promise<TripEvent | undefined> {
     return await db.events.get(id);
+  },
+
+  /**
+   * Get all reminders for a trip
+   */
+  async getRemindersForTrip(tripId: string): Promise<Reminder[]> {
+    return await db.reminders.where("tripId").equals(tripId).toArray();
+  },
+
+  /**
+   * Get a reminder by trip ID and day key
+   */
+  async getReminder(tripId: string, dayKey: string): Promise<Reminder | undefined> {
+    return await db.reminders
+      .where("[tripId+dayKey]")
+      .equals([tripId, dayKey])
+      .first();
+  },
+
+  /**
+   * Save a reminder (create or update)
+   */
+  async saveReminder(tripId: string, dayKey: string, content: string): Promise<void> {
+    const existing = await db.reminders
+      .where("[tripId+dayKey]")
+      .equals([tripId, dayKey])
+      .first();
+
+    if (existing) {
+      await db.reminders.update(existing.id, {
+        content,
+        updatedAt: new Date().toISOString(),
+      });
+    } else {
+      await db.reminders.add({
+        id: crypto.randomUUID(),
+        tripId,
+        dayKey,
+        content,
+        updatedAt: new Date().toISOString(),
+      });
+    }
+  },
+
+  /**
+   * Delete a reminder
+   */
+  async deleteReminder(id: string): Promise<void> {
+    await db.reminders.delete(id);
   },
 };

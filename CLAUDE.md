@@ -171,8 +171,9 @@ TravelPlanner-Web/
 - **Rate limiting**: Location search limited to 1 request per second (Nominatim policy)
 - **PWA installation**: Can be installed on iPhone via "Add to Home Screen" in Safari, runs in standalone mode
 - **Safe area handling**: CSS `env(safe-area-inset-*)` for iPhone notch/home indicator support
-- **Daily notes**: Per-day journal notes stored in `dayNotes` IndexedDB table (Dexie DB version 2), keyed by `[tripId+dayKey]`. Uses `useDayNotes` hook for live queries. Inline editing UI in day-section with auto-save on blur.
-- **List view timeline timestamps**: Event start times displayed as small labels to the left of timeline dots in the day section. Timeline uses `pl-16` padding with the line at `left-[3.25rem]`.
+- **Daily reminders**: Short reminder notes stored in `reminders` IndexedDB table (Dexie DB version 3), keyed by `[tripId+dayKey]`. Uses `useReminders` hook for live queries. Feature implemented but currently hidden from UI (map sidebar with reminders was disabled).
+- **Day map view**: Interactive map using Leaflet + OpenStreetMap (no API key required) showing hotels (purple), restaurants (red), and flight airports filtered by day's city (blue). Map auto-fits bounds to show all markers. Feature implemented but currently hidden from UI.
+- **List view timeline**: Single-column layout with timeline dots and time labels. Events displayed in chronological order with navigation links between consecutive events.
 - **Calendar view event positioning**: Events are rendered directly inside the day column div (not inside per-slot divs) using `position: absolute` with `top` calculated as `(startHour - 6) * 64px`.
 
 ### API Configuration (Web)

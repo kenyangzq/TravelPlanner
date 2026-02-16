@@ -125,6 +125,24 @@ export interface CarRentalEvent extends BaseEvent {
   hasCarRental: boolean;
 }
 
+// Daily reminder (short note)
+export interface Reminder {
+  id: string;
+  tripId: string;
+  dayKey: string; // "YYYY-MM-DD"
+  content: string;
+  updatedAt: string; // ISO date string
+}
+
+// Day map location markers
+export interface DayMapLocation {
+  id: string;
+  type: "hotel" | "restaurant" | "flight";
+  name: string;
+  latitude: number;
+  longitude: number;
+}
+
 // Navigation link types
 export interface EventNavigationLink {
   destinationLabel: string;
