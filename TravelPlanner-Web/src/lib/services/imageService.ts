@@ -79,16 +79,50 @@ const CITY_IMAGE_MAP: Record<string, string> = {
   zurich: "https://images.unsplash.com/photo-1547707996-cf3858f0c0a4?w=800&q=80",
 };
 
+// Common aliases and abbreviations mapping to canonical city names
+const CITY_ALIASES: Record<string, string> = {
+  nyc: "new york",
+  "new york city": "new york",
+  "new york, ny": "new york",
+  la: "los angeles",
+  sf: "san francisco",
+  "san fran": "san francisco",
+  dc: "washington dc",
+  "washington d.c.": "washington dc",
+  vegas: "las vegas",
+  "rio de janeiro": "rio",
+  bkk: "bangkok",
+  hk: "hong kong",
+  "mexico city": "mexico city",
+  cdmx: "mexico city",
+  "cape town": "cape town",
+  "buenos aires": "buenos aires",
+  ba: "buenos aires",
+};
+
 /**
  * Get an image URL for a given city.
- * First checks the city map, then falls back to a random travel image.
+ * Tries exact match, then aliases, then substring matching against known cities.
  */
 export function getCityImageUrl(city: string): string {
   const normalizedCity = city.toLowerCase().trim();
 
-  // Check if we have a specific image for this city
+  // 1. Exact match
   if (CITY_IMAGE_MAP[normalizedCity]) {
     return CITY_IMAGE_MAP[normalizedCity];
+  }
+
+  // 2. Check aliases
+  const aliasKey = CITY_ALIASES[normalizedCity];
+  if (aliasKey && CITY_IMAGE_MAP[aliasKey]) {
+    return CITY_IMAGE_MAP[aliasKey];
+  }
+
+  // 3. Substring match: input contains a known city, or a known city contains the input
+  for (const key of Object.keys(CITY_IMAGE_MAP)) {
+    if (normalizedCity.includes(key) || key.includes(normalizedCity)) {
+      return CITY_IMAGE_MAP[key];
+    }
   }
 
   // For unknown cities, return a random default travel image

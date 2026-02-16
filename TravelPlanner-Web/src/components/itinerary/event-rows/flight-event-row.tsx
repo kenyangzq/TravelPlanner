@@ -38,7 +38,7 @@ export const FlightEventRow: React.FC<FlightEventRowProps> = ({
 
   return (
     <div
-      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+      className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 sm:p-5 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
       onClick={onClick}
     >
       <div className="flex items-center justify-between mb-4">
@@ -69,11 +69,11 @@ export const FlightEventRow: React.FC<FlightEventRowProps> = ({
       </div>
 
       {/* Departure/Arrival Grid */}
-      <div className="grid grid-cols-3 gap-4 border-t border-slate-100 dark:border-slate-800 pt-4">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4 border-t border-slate-100 dark:border-slate-800 pt-4">
         <div>
           <p className="text-[10px] uppercase text-slate-400 font-bold mb-1">Departure</p>
-          <p className="text-lg font-bold text-slate-900 dark:text-white">{departureTime}</p>
-          <p className="text-xs text-slate-500">
+          <p className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">{departureTime}</p>
+          <p className="text-[10px] sm:text-xs text-slate-500 truncate">
             {event.departureAirportIATA} • {event.departureTerminal || `Term ${event.departureTerminal || "T1"}`}
           </p>
         </div>
@@ -83,8 +83,8 @@ export const FlightEventRow: React.FC<FlightEventRowProps> = ({
         </div>
         <div className="text-right">
           <p className="text-[10px] uppercase text-slate-400 font-bold mb-1">Arrival</p>
-          <p className="text-lg font-bold text-slate-900 dark:text-white">{arrivalTime}</p>
-          <p className="text-xs text-slate-500">
+          <p className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">{arrivalTime}</p>
+          <p className="text-[10px] sm:text-xs text-slate-500 truncate">
             {event.arrivalAirportIATA} • {event.arrivalTerminal || `Term ${event.arrivalTerminal || "T1"}`}
           </p>
         </div>

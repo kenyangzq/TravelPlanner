@@ -71,7 +71,7 @@ export const TripList: React.FC<TripListProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-8">
       {trips.map((trip) => {
         const counts = eventCounts?.get(trip.id);
         return (

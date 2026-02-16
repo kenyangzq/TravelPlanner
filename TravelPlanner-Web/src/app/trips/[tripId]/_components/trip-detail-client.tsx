@@ -79,21 +79,21 @@ export function TripDetailClient({ tripId: propTripId }: TripDetailClientProps) 
   return (
     <div className="min-h-screen bg-[#f6f7f8] dark:bg-[#111921] pb-20">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-primary/10 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-primary/10 px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
           <Button
             size="sm"
             variant="ghost"
             onClick={() => router.push("/")}
-            className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+            className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white flex-shrink-0"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <div className="bg-primary p-2 rounded-lg">
+          <div className="bg-primary p-2 rounded-lg flex-shrink-0 hidden sm:flex">
             <MapPin className="w-5 h-5 text-white" />
           </div>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+          <div className="min-w-0">
+            <h1 className="text-base sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white truncate">
               {trip.name}
             </h1>
             <p className="text-xs text-slate-500 font-medium">
@@ -101,7 +101,7 @@ export function TripDetailClient({ tripId: propTripId }: TripDetailClientProps) 
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 flex-shrink-0">
           {/* Export calendar button */}
           <Button
             size="sm"
@@ -109,8 +109,8 @@ export function TripDetailClient({ tripId: propTripId }: TripDetailClientProps) 
             onClick={handleExportCalendar}
             className="text-primary hover:bg-primary/5"
           >
-            <Download className="w-4 h-4 mr-1" />
-            Export
+            <Download className="w-4 h-4" />
+            <span className="hidden sm:inline ml-1">Export</span>
           </Button>
 
           <Button
@@ -121,14 +121,15 @@ export function TripDetailClient({ tripId: propTripId }: TripDetailClientProps) 
             }}
             className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
           >
-            <Plus className="w-4 h-4 mr-1" />
-            Add Event
+            <Plus className="w-4 h-4" />
+            <span className="ml-1 sm:hidden">Add</span>
+            <span className="hidden sm:inline ml-1">Add Event</span>
           </Button>
         </div>
       </header>
 
       {/* View mode toggle */}
-      <div className="sticky top-20 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-b border-primary/10 px-6 py-2">
+      <div className="sticky top-[52px] sm:top-[68px] z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-b border-primary/10 px-3 sm:px-6 py-2">
         <div className="max-w-3xl mx-auto flex items-center gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg w-fit">
           <button
             onClick={() => useUIStore.getState().setItineraryViewMode("list")}
@@ -154,7 +155,7 @@ export function TripDetailClient({ tripId: propTripId }: TripDetailClientProps) 
       </div>
 
       {/* Content */}
-      <main className="max-w-3xl mx-auto py-8 px-6">
+      <main className="max-w-3xl mx-auto py-4 sm:py-8 px-3 sm:px-6">
         {useUIStore.getState().itineraryViewMode === "list" ? (
           <ListView
             tripId={tripId}

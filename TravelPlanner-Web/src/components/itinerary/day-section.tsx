@@ -80,28 +80,28 @@ export const DaySection: React.FC<DaySectionProps> = ({
   return (
     <section className="mb-16 max-w-7xl mx-auto">
       {/* Day header */}
-      <div className="flex items-center gap-4 mb-6">
-        <div className="bg-primary/10 dark:bg-primary/20 text-primary w-14 h-14 rounded-xl flex items-center justify-center font-bold text-xl shadow-sm">
+      <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+        <div className="bg-primary/10 dark:bg-primary/20 text-primary w-11 h-11 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center font-bold text-lg sm:text-xl shadow-sm flex-shrink-0">
           {dayNumber || format(date, "d")}
         </div>
         <div>
-          <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">
+          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">
             {format(date, "EEEE")}
           </h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">{format(date, "MMMM d, yyyy")}</p>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium">{format(date, "MMMM d, yyyy")}</p>
         </div>
       </div>
 
       {/* Timeline layout - Map and reminder hidden for now */}
-      <div className="relative pl-16 pr-4">
+      <div className="relative pl-12 sm:pl-16 pr-2 sm:pr-4">
         {/* Timeline line */}
-        <div className="absolute left-[3.5rem] top-0 bottom-0 w-0.5 bg-gradient-to-b from-transparent via-primary to-transparent opacity-30" />
+        <div className="absolute left-[2.5rem] sm:left-[3.5rem] top-0 bottom-0 w-0.5 bg-gradient-to-b from-transparent via-primary to-transparent opacity-30" />
 
         {/* Day hotel header (if applicable) */}
         {dayHotel && (
-            <div className="relative pl-8 pb-6">
-              <span className="absolute -left-[3.5rem] top-4 w-[2.75rem] text-right pr-3 text-[10px] font-semibold text-slate-400 dark:text-slate-500 leading-tight">
-                {format(parseISO(dayHotel.hotel.checkInDate), "h:mm a")}
+            <div className="relative pl-6 sm:pl-8 pb-6">
+              <span className="absolute -left-[2.5rem] sm:-left-[3.5rem] top-4 w-[2rem] sm:w-[2.75rem] text-right pr-1 sm:pr-3 text-[9px] sm:text-[10px] font-semibold text-slate-400 dark:text-slate-500 leading-tight">
+                {format(parseISO(dayHotel.hotel.checkInDate), "h:mma")}
               </span>
               <div className="absolute -left-[5px] top-5 w-3 h-3 rounded-full bg-primary ring-4 ring-white dark:ring-slate-950" />
               <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow">
@@ -138,11 +138,11 @@ export const DaySection: React.FC<DaySectionProps> = ({
 
             return (
               <React.Fragment key={item.id}>
-                <div className="relative pl-8 pb-6">
+                <div className="relative pl-6 sm:pl-8 pb-6">
                   {showTimelineDot && (
                     <>
-                      <span className="absolute -left-[3.5rem] top-4 w-[2.75rem] text-right pr-3 text-[10px] font-semibold text-slate-400 dark:text-slate-500 leading-tight">
-                        {format(parseISO(event.startDate), "h:mm a")}
+                      <span className="absolute -left-[2.5rem] sm:-left-[3.5rem] top-4 w-[2rem] sm:w-[2.75rem] text-right pr-1 sm:pr-3 text-[9px] sm:text-[10px] font-semibold text-slate-400 dark:text-slate-500 leading-tight">
+                        {format(parseISO(event.startDate), "h:mma")}
                       </span>
                       <div className="absolute -left-[5px] top-5 w-3 h-3 rounded-full bg-primary ring-4 ring-white dark:ring-slate-950" />
                     </>
@@ -186,7 +186,7 @@ export const DaySection: React.FC<DaySectionProps> = ({
 
                 {/* Navigation link to next event */}
                 {item.navigationToEvent && item.navigationToEvent.directionsURL && (
-                  <div className="relative pl-8 pb-6">
+                  <div className="relative pl-6 sm:pl-8 pb-6">
                     <a
                       href={item.navigationToEvent.directionsURL}
                       target="_blank"

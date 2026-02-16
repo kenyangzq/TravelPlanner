@@ -36,12 +36,12 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#f6f7f8] dark:bg-[#111921] pb-20">
       {/* Header */}
-      <header className="h-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-primary/10 sticky top-0 z-10 px-8 flex items-center justify-between">
+      <header className="h-16 sm:h-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-primary/10 sticky top-0 z-10 px-4 sm:px-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">
             My Trips
           </h1>
-          <p className="text-sm text-slate-500 mt-0.5">
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
             {trips.length} trip{trips.length !== 1 ? "s" : ""} planned
           </p>
         </div>
@@ -49,13 +49,14 @@ export default function HomePage() {
           onClick={() => setIsNewTripDialogOpen(true)}
           className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
         >
-          <Plus className="w-4 h-4 mr-2" />
-          Create New Trip
+          <Plus className="w-4 h-4" />
+          <span className="ml-1 sm:hidden">New</span>
+          <span className="hidden sm:inline ml-2">Create New Trip</span>
         </Button>
       </header>
 
       {/* Trip list */}
-      <main className="max-w-7xl mx-auto px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-8 py-4 sm:py-8">
         <TripList
           trips={trips}
           onSelectTrip={(tripId) => router.push(`/trips/${tripId}/`)}

@@ -1,5 +1,20 @@
 # TravelPlanner Change History
 
+## 2026-02-16: Mobile UI responsiveness fixes across the web app
+- **Trip detail header**: Shortened "Add Event" → "Add" and "Export" → icon-only on mobile. Reduced padding, hid MapPin icon on small screens, added `truncate` to trip name. Fixed sticky view toggle `top` offset to match smaller mobile header.
+- **Calendar view**: Merged date header and body into a single scroll container so headers scroll horizontally with content. Reduced column width from 128px to 80px on mobile, slot height from 64px to 40px. Made event blocks more compact with smaller text and hidden time labels on mobile. Added responsive `slotHeight` state that updates on window resize.
+- **Home page**: Shortened "Create New Trip" → "New" on mobile. Reduced header height, padding, and font sizes.
+- **Trip list**: Reduced grid gap from 32px to 16px on mobile.
+- **Day section timeline**: Reduced left padding from 64px to 48px on mobile. Adjusted time label positioning and font sizes. Made day header badge and text smaller on mobile.
+- **Flight event row**: Reduced padding and font sizes. Added `truncate` to airport info text.
+- **Hotel cards (calendar view)**: More compact padding, smaller icons, single-line date range on mobile.
+- Files modified: `trip-detail-client.tsx`, `calendar-view.tsx`, `page.tsx`, `trip-list.tsx`, `day-section.tsx`, `flight-event-row.tsx`
+
+## 2026-02-16: Fix flight API key not found in Azure SWA production
+- Root cause: GitHub Actions workflow referenced `secrets.RAPIDAPI_KEY` but the actual GitHub secret is named `NEXT_PUBLIC_RAPIDAPI_KEY`. The mismatch meant the env var was empty at build time.
+- Fix: Updated workflow to use `secrets.NEXT_PUBLIC_RAPIDAPI_KEY` to match the actual secret name.
+- Files modified: `.github/workflows/azure-static-web-apps-calm-ground-01e6aa11e.yml`
+
 ## 2026-02-16: Fix "Trip not found" on Azure SWA production for newly created trips
 - Root cause: In static export, Azure SWA rewrites all `/trips/*` to `/trips/_/index.html`. The server component passed `tripId: '_'` as a prop, so the client could never find the actual trip.
 - Fix: Client component now reads the real tripId from `window.location.pathname` instead of relying on the server-provided prop.

@@ -31,6 +31,15 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   onEventClick,
   onDeleteEvent,
 }) => {
+  // Responsive slot height: 40px on mobile, 64px on desktop
+  const [slotHeight, setSlotHeight] = React.useState(64);
+  React.useEffect(() => {
+    const update = () => setSlotHeight(window.innerWidth < 640 ? 40 : 64);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
   const tripStart = startOfDay(parseISO(trip.startDate));
   const tripEnd = startOfDay(parseISO(trip.endDate));
   const tripDays = eachDayOfInterval({ start: tripStart, end: tripEnd });
@@ -68,9 +77,9 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     const startHour = startDate.getHours() + startDate.getMinutes() / 60;
     const endHour = endDate.getHours() + endDate.getMinutes() / 60;
 
-    // Map to 6 AM - 11 PM range (18 slots)
-    const topOffset = Math.max(0, startHour - 6) * 64; // 64px per hour
-    const height = Math.max(80, (endHour - startHour) * 64); // Minimum 80px for better text display
+    const topOffset = Math.max(0, startHour - 6) * slotHeight;
+    const minHeight = slotHeight < 64 ? 32 : 80;
+    const height = Math.max(minHeight, (endHour - startHour) * slotHeight);
 
     return {
       top: `${topOffset}px`,
@@ -83,35 +92,31 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
       {/* Hotels Section - Separate block above calendar */}
       {hotels.length > 0 && (
         <div className="bg-white dark:bg-slate-900 rounded-xl border-2 border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-          <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-gradient-to-r from-purple-50 to-purple-100/50 dark:from-purple-900/20 dark:to-purple-900/10">
-            <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+          <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 dark:border-slate-800 bg-gradient-to-r from-purple-50 to-purple-100/50 dark:from-purple-900/20 dark:to-purple-900/10">
+            <h3 className="text-base sm:text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
               <Calendar className="w-5 h-5 text-purple-600 dark:text-purple-400" />
               Accommodations
             </h3>
           </div>
-          <div className="p-6 grid gap-4">
+          <div className="p-3 sm:p-6 grid gap-3 sm:gap-4">
             {hotels.map((hotel) => (
               <div
                 key={hotel.id}
-                className="relative bg-gradient-to-r from-purple-50 to-purple-100/50 dark:from-purple-900/20 dark:to-purple-900/10 border border-purple-200 dark:border-purple-800 rounded-xl p-4 hover:shadow-md transition-all cursor-pointer group"
+                className="relative bg-gradient-to-r from-purple-50 to-purple-100/50 dark:from-purple-900/20 dark:to-purple-900/10 border border-purple-200 dark:border-purple-800 rounded-xl p-3 sm:p-4 hover:shadow-md transition-all cursor-pointer group"
                 onClick={() => onEventClick(hotel.id)}
               >
                 <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-3 flex-1 min-w-0">
-                    <div className="w-12 h-12 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0">
-                      <Calendar className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                  <div className="flex items-start gap-2 sm:gap-3 flex-1 min-w-0">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0">
+                      <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600 dark:text-purple-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-bold text-slate-800 dark:text-white text-lg mb-1">
+                      <h4 className="font-bold text-slate-800 dark:text-white text-base sm:text-lg mb-1 truncate">
                         {hotel.hotelName}
                       </h4>
-                      <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
                         <span>
-                          Check-in: {format(parseISO(hotel.checkInDate), "MMM d, yyyy")}
-                        </span>
-                        <span>→</span>
-                        <span>
-                          Check-out: {format(parseISO(hotel.checkOutDate), "MMM d, yyyy")}
+                          {format(parseISO(hotel.checkInDate), "MMM d")} → {format(parseISO(hotel.checkOutDate), "MMM d, yyyy")}
                         </span>
                       </div>
                       {hotel.hotelAddress && (
@@ -145,110 +150,112 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
       {/* Calendar Grid */}
       <div className="bg-white dark:bg-slate-900 rounded-xl border-2 border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-        {/* Calendar header with day columns */}
-        <div className="sticky top-0 z-10 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-slate-800 dark:to-slate-900 border-b">
-          <div className="flex min-w-max">
-            {/* Time column header */}
-            <div className="w-16 flex-shrink-0 p-2 text-xs font-medium text-slate-500 dark:text-slate-400 text-center">
-              Time
+        {/* Single scroll container so header and body scroll together horizontally */}
+        <div className="overflow-x-auto overflow-y-auto max-h-[600px] sm:max-h-[800px]">
+          <div className="min-w-max">
+            {/* Calendar header with day columns - sticks to top while vertical scrolling */}
+            <div className="sticky top-0 z-10 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-slate-800 dark:to-slate-900 border-b">
+              <div className="flex">
+                {/* Time column header */}
+                <div className="w-12 sm:w-16 flex-shrink-0 p-1.5 sm:p-2 text-[10px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 text-center">
+                  Time
+                </div>
+
+                {/* Day columns */}
+                {tripDays.map((day) => (
+                  <div
+                    key={day.toISOString()}
+                    className="w-20 sm:w-32 flex-shrink-0 p-1.5 sm:p-2 text-center border-l dark:border-slate-700"
+                  >
+                    <div className="text-[10px] sm:text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
+                      {format(day, "EEE")}
+                    </div>
+                    <div className="text-base sm:text-xl font-bold text-slate-900 dark:text-slate-100 mt-0.5">
+                      {format(day, "d")}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            {/* Day columns */}
-            {tripDays.map((day) => (
-              <div
-                key={day.toISOString()}
-                className="w-32 flex-shrink-0 p-2 text-center border-l dark:border-slate-700"
-              >
-                <div className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
-                  {format(day, "EEE")}
-                </div>
-                <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-0.5">
-                  {format(day, "d")}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-      {/* Scrollable calendar body */}
-      <div className="overflow-x-auto overflow-y-auto max-h-[800px]">
-        <div className="flex min-w-max">
-          {/* Time column */}
-          <div className="w-16 flex-shrink-0 border-r dark:border-gray-700">
-            {timeSlots.map((slot) => (
-              <div
-                key={slot.hour}
-                className="h-16 flex items-center justify-center border-b dark:border-gray-800 text-xs text-gray-500 dark:text-gray-400"
-              >
-                {slot.label}
-              </div>
-            ))}
-          </div>
-
-          {/* Day columns */}
-          {tripDays.map((day) => {
-            // Get non-hotel events for this day
-            const dayEvents = getDayEvents(day);
-
-            return (
-              <div
-                key={day.toISOString()}
-                className="w-32 flex-shrink-0 border-r dark:border-slate-700 relative"
-                style={{ height: `${timeSlots.length * 64}px` }}
-              >
-                {/* Time slot grid lines */}
+            {/* Calendar body */}
+            <div className="flex">
+              {/* Time column */}
+              <div className="w-12 sm:w-16 flex-shrink-0 border-r dark:border-gray-700">
                 {timeSlots.map((slot) => (
                   <div
                     key={slot.hour}
-                    className="h-16 border-b dark:border-gray-800"
-                  />
+                    className="h-10 sm:h-16 flex items-center justify-center border-b dark:border-gray-800 text-[10px] sm:text-xs text-gray-500 dark:text-gray-400"
+                  >
+                    {slot.label}
+                  </div>
                 ))}
+              </div>
 
-                {/* Render events positioned absolutely within the day column */}
-                {dayEvents.map((event) => {
-                  const style = getEventStyle(event);
-                  const isFlight = isFlightEvent(event);
-                  const color = getEventColor(event.eventType);
+              {/* Day columns */}
+              {tripDays.map((day) => {
+                const dayEvents = getDayEvents(day);
 
-                  const bgColors = {
-                    blue: "bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800",
-                    red: "bg-red-100 dark:bg-red-900/30 border-red-200 dark:border-red-800",
-                    orange: "bg-orange-100 dark:bg-orange-900/30 border-orange-200 dark:border-orange-800",
-                    green: "bg-green-100 dark:bg-green-900/30 border-green-200 dark:border-green-800",
-                    purple: "bg-purple-100 dark:bg-purple-900/30 border-purple-200 dark:border-purple-800",
-                  };
+                return (
+                  <div
+                    key={day.toISOString()}
+                    className="w-20 sm:w-32 flex-shrink-0 border-r dark:border-slate-700 relative"
+                    style={{ height: `${timeSlots.length * slotHeight}px` }}
+                  >
+                    {/* Time slot grid lines */}
+                    {timeSlots.map((slot) => (
+                      <div
+                        key={slot.hour}
+                        className="h-10 sm:h-16 border-b dark:border-gray-800"
+                      />
+                    ))}
 
-                  return (
-                    <div
-                      key={event.id}
-                      className={`absolute left-0.5 right-0.5 rounded-lg shadow-sm hover:shadow-md transition-all p-1.5 cursor-pointer z-[1] ${bgColors[color as keyof typeof bgColors]}`}
-                      style={style}
-                      onClick={() => onEventClick(event.id)}
-                    >
-                      <div className="flex items-start gap-1.5">
-                        {isFlight ? (
-                          <Plane className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-                        ) : (
-                          <span className="w-3.5 h-3.5 bg-current opacity-60 rounded-full flex-shrink-0 mt-0.5" />
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <div className="text-xs font-bold text-slate-900 dark:text-slate-100 leading-tight break-words">
-                            {event.title}
-                          </div>
-                          <div className="text-xs font-medium text-slate-700 dark:text-slate-300 mt-0.5">
-                            {format(parseISO(event.startDate), "h:mm a")}
+                    {/* Render events positioned absolutely within the day column */}
+                    {dayEvents.map((event) => {
+                      const style = getEventStyle(event);
+                      const isFlight = isFlightEvent(event);
+                      const color = getEventColor(event.eventType);
+
+                      const bgColors = {
+                        blue: "bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800",
+                        red: "bg-red-100 dark:bg-red-900/30 border-red-200 dark:border-red-800",
+                        orange: "bg-orange-100 dark:bg-orange-900/30 border-orange-200 dark:border-orange-800",
+                        green: "bg-green-100 dark:bg-green-900/30 border-green-200 dark:border-green-800",
+                        purple: "bg-purple-100 dark:bg-purple-900/30 border-purple-200 dark:border-purple-800",
+                      };
+
+                      return (
+                        <div
+                          key={event.id}
+                          className={`absolute left-0.5 right-0.5 rounded-md sm:rounded-lg shadow-sm hover:shadow-md transition-all p-1 sm:p-1.5 cursor-pointer z-[1] ${bgColors[color as keyof typeof bgColors]}`}
+                          style={style}
+                          onClick={() => onEventClick(event.id)}
+                        >
+                          <div className="flex items-start gap-1">
+                            {isFlight ? (
+                              <Plane className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                            ) : (
+                              <span className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 bg-current opacity-60 rounded-full flex-shrink-0 mt-0.5" />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <div className="text-[10px] sm:text-xs font-bold text-slate-900 dark:text-slate-100 leading-tight truncate">
+                                {event.title}
+                              </div>
+                              <div className="text-[10px] sm:text-xs font-medium text-slate-700 dark:text-slate-300 mt-0.5 hidden sm:block">
+                                {format(parseISO(event.startDate), "h:mm a")}
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            );
-          })}
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
-        </div>
       {/* End Calendar Grid */}
     </div>
   );
