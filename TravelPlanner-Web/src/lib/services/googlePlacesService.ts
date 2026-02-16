@@ -458,7 +458,7 @@ function extractAddressComponents(
 /**
  * Geocode a city to get its coordinates (for location biasing)
  */
-async function geocodeCity(
+export async function geocodeCity(
   city: string
 ): Promise<{ lat: number; lng: number } | null> {
   if (!API_KEY) return null;

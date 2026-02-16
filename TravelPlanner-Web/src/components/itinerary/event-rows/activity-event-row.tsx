@@ -9,6 +9,7 @@ import * as React from "react";
 import { Star as ActivityIcon, MapPin, Trash2, Clock, ExternalLink, Search } from "lucide-react";
 import { formatTime } from "@/lib/utils/dateFormatters";
 import { buildLocationSearchLink } from "@/lib/utils/navigationLinks";
+import { buildRedNoteSearchURL } from "@/lib/services/reviewsService";
 import type { ItineraryItem, ActivityEvent } from "@/lib/models";
 
 interface ActivityEventRowProps {
@@ -78,12 +79,10 @@ export const ActivityEventRow: React.FC<ActivityEventRowProps> = ({
           </a>
         )}
 
-        {/* RedNote link */}
-        {event.googlePlaceName && tripCities.length > 0 && (
+        {/* RedNote link - deep links into RedNote app */}
+        {event.googlePlaceName && (
           <a
-            href={`https://www.xiaohongshu.com/search_result?keyword=${encodeURIComponent(event.googlePlaceName + " " + tripCities[0])}`}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={buildRedNoteSearchURL(event.googlePlaceName, tripCities) || "#"}
             className="inline-flex items-center gap-1.5 text-xs font-bold text-red-600 hover:text-red-700 hover:underline"
             onClick={(e) => e.stopPropagation()}
           >

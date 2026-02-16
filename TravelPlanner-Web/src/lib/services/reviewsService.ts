@@ -46,8 +46,10 @@ export function buildGoogleReviewsURL(
 }
 
 /**
- * Build RedNote (Xiaohongshu) search URL for a place
- * Uses place name + city for better context
+ * Build RedNote (Xiaohongshu) search URL for a place.
+ * Uses xhsdiscover:// deep link to open the RedNote app directly on mobile.
+ * The web URL (xiaohongshu.com) doesn't work well on mobile — it often
+ * redirects to app download pages instead of showing search results.
  */
 export function buildRedNoteSearchURL(
   placeName: string,
@@ -63,5 +65,5 @@ export function buildRedNoteSearchURL(
   }
 
   const encoded = encodeURIComponent(query);
-  return `https://www.xiaohongshu.com/search_result?keyword=${encoded}`;
+  return `xhsdiscover://search/result?keyword=${encoded}`;
 }

@@ -10,6 +10,7 @@ import { Utensils, MapPin, Trash2, Users, Clock, ExternalLink, Search } from "lu
 import { Badge } from "../../ui/badge";
 import { formatTime } from "@/lib/utils/dateFormatters";
 import { buildLocationSearchLink } from "@/lib/utils/navigationLinks";
+import { buildRedNoteSearchURL } from "@/lib/services/reviewsService";
 import type { ItineraryItem, RestaurantEvent } from "@/lib/models";
 
 interface RestaurantEventRowProps {
@@ -91,12 +92,10 @@ export const RestaurantEventRow: React.FC<RestaurantEventRowProps> = ({
           </a>
         )}
 
-        {/* RedNote link */}
-        {event.googlePlaceName && tripCities.length > 0 && (
+        {/* RedNote link - deep links into RedNote app */}
+        {event.googlePlaceName && (
           <a
-            href={`https://www.xiaohongshu.com/search_result?keyword=${encodeURIComponent(event.googlePlaceName + " " + tripCities[0])}`}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={buildRedNoteSearchURL(event.googlePlaceName, tripCities) || "#"}
             className="inline-flex items-center gap-1.5 text-xs font-bold text-red-600 hover:text-red-700 hover:underline"
             onClick={(e) => e.stopPropagation()}
           >

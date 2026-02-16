@@ -1,5 +1,22 @@
 # TravelPlanner Change History
 
+## 2026-02-16: Fix RedNote links not opening on mobile
+- **Problem**: RedNote web URL (`xiaohongshu.com/search_result?keyword=...`) doesn't work on mobile — redirects to app download pages instead of showing search results
+- **Fix**: Changed to `xhsdiscover://` deep link scheme (`xhsdiscover://search/result?keyword=...`) which opens the RedNote app directly on mobile
+- **Centralized URL generation**: All three event rows (hotel, restaurant, activity) now use `buildRedNoteSearchURL()` from `reviewsService.ts` instead of inlining the URL
+- **Removed `target="_blank"`**: Deep links don't need `target="_blank"` or `rel="noopener noreferrer"`
+- **Relaxed condition**: RedNote link now shows when `googlePlaceName` exists regardless of `tripCities` (city is optional context)
+- Files modified: `src/lib/services/reviewsService.ts`, `src/components/itinerary/event-rows/hotel-event-row.tsx`, `src/components/itinerary/event-rows/restaurant-event-row.tsx`, `src/components/itinerary/event-rows/activity-event-row.tsx`
+
+## 2026-02-16: Add daily weather forecasts to itinerary list view
+- **New feature**: Weather badges now appear on each day's header in the itinerary list view, showing high/low temperature, weather icon, and precipitation probability (if >30%)
+- **Google Weather API**: Uses `weather.googleapis.com/v1/forecast/days:lookup` with the existing Google Maps API key (Weather API must be enabled on the Google Cloud project)
+- **IndexedDB caching**: Weather data cached in `weatherCache` table (Dexie v5) with 3-hour TTL, keyed by rounded coordinates + date. Falls back to stale cache on API error.
+- **Graceful degradation**: No badges shown for dates >10 days away, API errors, or missing API key
+- **Uses first trip city**: Geocodes first city via existing `geocodeCity()` function for coordinates
+- Files created: `src/lib/services/weatherService.ts`, `src/lib/hooks/useWeather.ts`, `src/components/itinerary/weather-badge.tsx`
+- Files modified: `src/lib/services/googlePlacesService.ts` (exported `geocodeCity`), `src/lib/models.ts` (added `WeatherCache`, `DayWeather` interfaces), `src/lib/db.ts` (added v5 with `weatherCache` table), `src/components/itinerary/list-view.tsx`, `src/components/itinerary/day-section.tsx`
+
 ## 2026-02-16: Fix Google Places in production (static export)
 - **Root cause**: `output: 'export'` in Next.js means no API routes exist in production. The `/api/places/*` proxy routes that handled CORS were unavailable in the static build.
 - **Fix**: Rewrote `googlePlacesService.ts` to use the **Google Maps JavaScript API** (Places library) instead of REST API proxied through API routes. The JS API is designed for client-side use and has no CORS issues.

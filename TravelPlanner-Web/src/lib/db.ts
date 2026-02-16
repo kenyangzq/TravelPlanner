@@ -17,6 +17,7 @@ import {
   CarRentalEvent,
   Reminder,
   ImageCache,
+  WeatherCache,
 } from "./models";
 
 /**
@@ -27,6 +28,7 @@ export class TravelPlannerDB extends Dexie {
   events!: Table<TripEvent, string>;
   reminders!: Table<Reminder, string>;
   imageCache!: Table<ImageCache, string>;
+  weatherCache!: Table<WeatherCache, string>;
 
   constructor() {
     super("TravelPlannerDB");
@@ -67,6 +69,15 @@ export class TravelPlannerDB extends Dexie {
       events: "id, tripId, eventType, [tripId+startDate]",
       reminders: "id, tripId, [tripId+dayKey]",
       imageCache: "city, url, fetchedAt",
+    });
+
+    // Version 5: Add weatherCache for daily weather forecasts
+    this.version(5).stores({
+      trips: "id, startDate, createdAt",
+      events: "id, tripId, eventType, [tripId+startDate]",
+      reminders: "id, tripId, [tripId+dayKey]",
+      imageCache: "city, url, fetchedAt",
+      weatherCache: "id, [lat+lng], date, fetchedAt",
     });
   }
 }

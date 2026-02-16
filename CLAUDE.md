@@ -116,6 +116,7 @@ TravelPlanner/
 - **Flight API**: AeroDataBox via RapidAPI (called directly from client)
 - **Maps**: Google Maps URLs (`google.com/maps/dir/?api=1&destination=...`)
 - **Location Search**: Google Places JavaScript API (loaded via Maps JS SDK, no API route proxy needed — works with static export)
+- **Weather**: Google Weather API (`weather.googleapis.com/v1/forecast/days:lookup`) — 10-day forecast, cached in IndexedDB (3h TTL)
 - **PWA**: `@ducanh2912/next-pwa` for service worker + manifest
 - **State**: Zustand for UI state (modals, editing); Dexie `useLiveQuery` for data
 - **Icons**: lucide-react
@@ -177,6 +178,7 @@ TravelPlanner-Web/
 - **Back button navigation**: ArrowLeft button in trip detail header for easy navigation back to trip list
 - **Simplified forms**: Trip form no longer requires destination field (cities sufficient). Restaurant form removed cuisine/confirmation fields. Hotel form removed confirmation field.
 - **DateRangePicker component**: Custom calendar picker (`src/components/ui/date-range-picker.tsx`) built with `date-fns`. Two-step selection (click start, click end), range highlighting, month navigation. Used in NewTripDialog, HotelForm, and CarRentalForm instead of separate `<input type="date">` fields.
+- **Daily weather forecasts**: Weather badges in itinerary list view day headers showing high/low temp, icon, and precipitation. Uses Google Weather API (10-day forecast, 10k free calls/month). Geocodes first trip city via `geocodeCity()`. Cached in `weatherCache` IndexedDB table (Dexie v5) with 3-hour TTL, keyed by rounded coords + date. Graceful degradation: no badge for dates >10 days away, API errors, or missing key.
 - **Daily reminders**: Short reminder notes stored in `reminders` IndexedDB table (Dexie DB version 3), keyed by `[tripId+dayKey]`. Uses `useReminders` hook for live queries. Feature implemented but currently hidden from UI (map sidebar with reminders was disabled).
 - **Day map view**: Interactive map using Leaflet + OpenStreetMap (no API key required) showing hotels (purple), restaurants (red), and flight airports filtered by day's city (blue). Map auto-fits bounds to show all markers. Feature implemented but currently hidden from UI.
 - **List view timeline**: Single-column layout with timeline dots and time labels. Events displayed in chronological order with navigation links between consecutive events.

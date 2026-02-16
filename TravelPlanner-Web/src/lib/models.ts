@@ -147,6 +147,29 @@ export interface ImageCache {
   fetchedAt: string; // ISO timestamp when image was fetched
 }
 
+// Weather cache entry (stored in IndexedDB)
+export interface WeatherCache {
+  id: string; // "{lat}_{lng}_{date}"
+  lat: number;
+  lng: number;
+  date: string; // "YYYY-MM-DD"
+  tempHigh: number; // Celsius
+  tempLow: number; // Celsius
+  conditionDescription: string;
+  iconUri: string;
+  precipitationProbability: number; // 0-100
+  fetchedAt: string; // ISO timestamp
+}
+
+// Weather data for a single day (returned to UI)
+export interface DayWeather {
+  tempHigh: number;
+  tempLow: number;
+  conditionDescription: string;
+  iconUri: string;
+  precipitationProbability: number;
+}
+
 // Day map location markers
 export interface DayMapLocation {
   id: string;

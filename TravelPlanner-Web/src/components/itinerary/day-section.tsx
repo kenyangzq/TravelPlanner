@@ -15,7 +15,8 @@ import { HotelEventRow } from "./event-rows/hotel-event-row";
 import { RestaurantEventRow } from "./event-rows/restaurant-event-row";
 import { ActivityEventRow } from "./event-rows/activity-event-row";
 import { CarRentalEventRow } from "./event-rows/car-rental-event-row";
-import type { ItineraryItem, DayHotelInfo, Reminder } from "@/lib/models";
+import { WeatherBadge } from "./weather-badge";
+import type { ItineraryItem, DayHotelInfo, DayWeather, Reminder } from "@/lib/models";
 
 interface DaySectionProps {
   tripId: string;
@@ -23,6 +24,7 @@ interface DaySectionProps {
   dayNumber?: number;
   items: ItineraryItem[];
   dayHotel: DayHotelInfo | null;
+  weather?: DayWeather;
   reminder?: Reminder;
   tripCities: string[];
   onEventClick: (eventId: string) => void;
@@ -37,6 +39,7 @@ export const DaySection: React.FC<DaySectionProps> = ({
   dayNumber,
   items,
   dayHotel,
+  weather,
   reminder,
   tripCities,
   onEventClick,
@@ -77,12 +80,13 @@ export const DaySection: React.FC<DaySectionProps> = ({
         <div className="bg-primary/10 dark:bg-primary/20 text-primary w-11 h-11 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center font-bold text-lg sm:text-xl shadow-sm flex-shrink-0">
           {dayNumber || format(date, "d")}
         </div>
-        <div>
+        <div className="flex-1">
           <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">
             {format(date, "EEEE")}
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium">{format(date, "MMMM d, yyyy")}</p>
         </div>
+        {weather && <WeatherBadge weather={weather} />}
       </div>
 
       {/* Timeline layout - Map and reminder hidden for now */}

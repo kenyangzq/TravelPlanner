@@ -14,6 +14,7 @@ import { EmptyState } from "../ui/empty-state";
 import { Calendar } from "lucide-react";
 import type { EventsByDayResult } from "@/lib/hooks/useTripDetail";
 import { useReminders } from "@/lib/hooks/useReminders";
+import { useWeather } from "@/lib/hooks/useWeather";
 import { useTrips } from "@/lib/hooks/useTrips";
 import { parseCities } from "@/lib/models";
 
@@ -34,6 +35,12 @@ export const ListView: React.FC<ListViewProps> = ({
   const { trips } = useTrips();
   const trip = trips.find((t) => t.id === tripId);
   const tripCities = trip ? parseCities(trip.citiesRaw) : [];
+  const tripDates = React.useMemo(
+    () => eventsByDay.map(({ date }) => date),
+    [eventsByDay]
+  );
+  const { weatherByDay } = useWeather(tripCities, tripDates);
+
   if (eventsByDay.length === 0) {
     return (
       <EmptyState
@@ -56,6 +63,7 @@ export const ListView: React.FC<ListViewProps> = ({
             dayNumber={index + 1}
             items={items}
             dayHotel={dayHotel}
+            weather={weatherByDay.get(dayKey)}
             reminder={remindersByDay.get(dayKey)}
             tripCities={tripCities}
             onEventClick={onEventClick}
