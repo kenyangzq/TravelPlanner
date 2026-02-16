@@ -19,6 +19,8 @@ jobs:
         with:
           submodules: true
           lfs: false
+      - name: Clean up old builds
+        run: rm -rf TravelPlanner-Web/.next TravelPlanner-Web/out
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
@@ -32,7 +34,8 @@ jobs:
           # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
           app_location: "/TravelPlanner-Web" # App source code path
           api_location: "" # Api source code path - optional
-          output_location: "" # Built app content directory - optional
+          output_location: "out" # Built app content directory - optional
+          is_static_export: true # Force static export mode, skip backend repackaging
           ###### End of Repository/Build Configurations ######
 
   close_pull_request_job:

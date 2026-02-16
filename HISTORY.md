@@ -1,5 +1,13 @@
 # TravelPlanner Change History
 
+## 2026-02-15: Force static export mode in GitHub Actions to avoid warmup timeout
+- Added `is_static_export: true` to Azure Static Web Apps deployment workflow
+- This forces Oryx (Azure's build engine) to treat the app as pure static export
+- Prevents Azure from repackaging Next.js for backend deployment which triggers warmup timeout
+- Added cleanup step to remove old `.next` and `out` directories before build
+- Combined with `output: 'export'` and `trailingSlash: true` in next.config.js
+- Files modified: `.github/workflows/azure-static-web-apps-calm-ground-01e6aa11e.yml`
+
 ## 2026-02-15: Optimize staticwebapp.config.json for Azure SWA deployment
 - Updated `navigationFallback.rewrite` to point directly to `/trips/_/index.html` for accurate dynamic route handling
 - Added `/images/*` to exclusion list and updated manifest filename to `manifest.webmanifest`
