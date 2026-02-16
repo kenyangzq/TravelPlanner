@@ -20,10 +20,67 @@ import { Plus, ArrowLeft, MapPin, Download } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { downloadICS } from "@/lib/utils/calendarExport";
 import { useEvents } from "@/lib/hooks/useEvents";
+import { getTripImageUrl, getTripImageUrlAsync } from "@/lib/services/imageService";
 
 interface TripDetailClientProps {
   tripId: string;
 }
+
+// Generate gradient color based on trip name for image placeholder
+const getGradientColor = (name: string) => {
+  const gradients = [
+    "from-blue-400 to-blue-600",
+    "from-purple-400 to-purple-600",
+    "from-emerald-400 to-emerald-600",
+    "from-orange-400 to-orange-600",
+    "from-pink-400 to-pink-600",
+    "from-cyan-400 to-cyan-600",
+  ];
+  const hash = name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return gradients[hash % gradients.length];
+};
+
+// City image banner component for trip detail page
+const TripImageBanner: React.FC<{ citiesRaw: string; tripName: string }> = ({ citiesRaw, tripName }) => {
+  const [imageSrc, setImageSrc] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setIsLoading(true);
+    const fallbackUrl = getTripImageUrl(citiesRaw);
+    setImageSrc(fallbackUrl);
+
+    getTripImageUrlAsync(citiesRaw)
+      .then((url) => {
+        setImageSrc(url);
+      })
+      .catch((error) => {
+        console.error("Failed to load city image:", error);
+      });
+  }, [citiesRaw]);
+
+  const handleLoad = () => {
+    setIsLoading(false);
+  };
+
+  const gradientColor = getGradientColor(tripName);
+
+  return (
+    <div className="relative h-[25vh] min-h-[180px] max-h-[300px] overflow-hidden">
+      {isLoading && (
+        <div className={`absolute inset-0 bg-gradient-to-br ${gradientColor} transition-opacity duration-300`} />
+      )}
+      <img
+        key={imageSrc}
+        src={imageSrc}
+        alt={tripName}
+        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+        onLoad={handleLoad}
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#f6f7f8] dark:from-[#111921] via-transparent to-transparent" />
+    </div>
+  );
+};
 
 export function TripDetailClient({ tripId: propTripId }: TripDetailClientProps) {
   // In production static export, the server param is always '_' due to SWA rewrite.
@@ -128,8 +185,11 @@ export function TripDetailClient({ tripId: propTripId }: TripDetailClientProps) 
         </div>
       </header>
 
+      {/* City Image Banner */}
+      <TripImageBanner citiesRaw={trip.citiesRaw} tripName={trip.name} />
+
       {/* View mode toggle */}
-      <div className="sticky top-[52px] sm:top-[68px] z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-b border-primary/10 px-3 sm:px-6 py-2">
+      <div className="sticky top-[52px] sm:top-[68px] z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-b border-primary/10 px-3 sm:px-6 py-2 -mt-px">
         <div className="max-w-3xl mx-auto flex items-center gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg w-fit">
           <button
             onClick={() => useUIStore.getState().setItineraryViewMode("list")}

@@ -1,5 +1,12 @@
 # TravelPlanner Change History
 
+## 2026-02-16: Fix Unsplash image loading and add trip detail banner
+- **Fixed image persistence issue**: Images were disappearing when navigating back from trip detail to trip list. Root cause: hardcoded URL failed (404) setting `hasError = true`, then cached URL arrived but error state wasn't cleared. Fixed by resetting error state when new URL arrives.
+- **Improved Unsplash integration**: Reordered `getCityImageUrlAsync()` to skip hardcoded map check and always try cache → API → hardcoded fallback. This ensures fresh images from API even for hardcoded cities, replacing broken hardcoded URLs.
+- **Added city image banner to trip detail page**: New `TripImageBanner` component shows city photo at top 25% of trip detail page (min 180px, max 300px height) with gradient overlay blending into page background.
+- **Enhanced TripImage component**: Added proper state management with error reset, loading state cleanup, and key prop for proper re-renders.
+- Files modified: `src/components/trips/trip-row.tsx`, `src/app/trips/[tripId]/_components/trip-detail-client.tsx`, `src/lib/services/imageService.ts`
+
 ## 2026-02-16: Dynamic city images via Unsplash API with IndexedDB caching
 - Added `imageCache` table to Dexie DB (version 4) with schema: `city, url, fetchedAt`
 - Rewrote `imageService.ts` with cache-first async strategy:

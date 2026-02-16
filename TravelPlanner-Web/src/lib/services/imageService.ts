@@ -150,11 +150,15 @@ export function getTripImageUrl(citiesRaw: string): string {
 
 /**
  * Get an image URL for a given city with async caching.
- * This function implements a cache-first strategy:
- * 1. Check hardcoded map (+ aliases + substring) → return immediately if found
- * 2. Check IndexedDB cache → return if cached
- * 3. If NEXT_PUBLIC_UNSPLASH_ACCESS_KEY is set, fetch from Unsplash API, cache result, return URL
+ * This function implements a cache-first strategy to fetch fresh images:
+ * 1. Check IndexedDB cache → return if cached
+ * 2. If NEXT_PUBLIC_UNSPLASH_ACCESS_KEY is set, fetch from Unsplash API, cache result, return URL
+ * 3. Fall back to hardcoded map (+ aliases + substring) for instant result
  * 4. Fall back to deterministic default image (hash-based, stable across renders)
+ *
+ * Note: This skips the hardcoded map check first to ensure we always try to get
+ * fresh images from the API/cache, even for cities that have hardcoded entries.
+ * The hardcoded map is used as a fallback if the API fails or has no key.
  *
  * @param city - The city name to fetch an image for
  * @returns Promise<string> - The image URL
@@ -162,23 +166,7 @@ export function getTripImageUrl(citiesRaw: string): string {
 export async function getCityImageUrlAsync(city: string): Promise<string> {
   const normalizedCity = city.toLowerCase().trim();
 
-  // 1. Check hardcoded map (+ aliases + substring) for instant result
-  if (CITY_IMAGE_MAP[normalizedCity]) {
-    return CITY_IMAGE_MAP[normalizedCity];
-  }
-
-  const aliasKey = CITY_ALIASES[normalizedCity];
-  if (aliasKey && CITY_IMAGE_MAP[aliasKey]) {
-    return CITY_IMAGE_MAP[aliasKey];
-  }
-
-  for (const key of Object.keys(CITY_IMAGE_MAP)) {
-    if (normalizedCity.includes(key) || key.includes(normalizedCity)) {
-      return CITY_IMAGE_MAP[key];
-    }
-  }
-
-  // 2. Check IndexedDB cache
+  // 1. Check IndexedDB cache first
   try {
     const cached = await db.imageCache.get(normalizedCity);
     if (cached) {
@@ -188,7 +176,7 @@ export async function getCityImageUrlAsync(city: string): Promise<string> {
     console.error("Failed to read from image cache:", error);
   }
 
-  // 3. Fetch from Unsplash API if key is available
+  // 2. Fetch from Unsplash API if key is available
   const accessKey = process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY;
   if (accessKey) {
     try {
@@ -222,6 +210,22 @@ export async function getCityImageUrlAsync(city: string): Promise<string> {
       }
     } catch (error) {
       console.error("Failed to fetch image from Unsplash:", error);
+    }
+  }
+
+  // 3. Fall back to hardcoded map (+ aliases + substring) for instant result
+  if (CITY_IMAGE_MAP[normalizedCity]) {
+    return CITY_IMAGE_MAP[normalizedCity];
+  }
+
+  const aliasKey = CITY_ALIASES[normalizedCity];
+  if (aliasKey && CITY_IMAGE_MAP[aliasKey]) {
+    return CITY_IMAGE_MAP[aliasKey];
+  }
+
+  for (const key of Object.keys(CITY_IMAGE_MAP)) {
+    if (normalizedCity.includes(key) || key.includes(normalizedCity)) {
+      return CITY_IMAGE_MAP[key];
     }
   }
 

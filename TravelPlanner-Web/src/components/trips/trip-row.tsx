@@ -48,44 +48,49 @@ const TripImage: React.FC<{ citiesRaw: string; tripName: string }> = ({ citiesRa
   const [hasError, setHasError] = React.useState(false);
 
   React.useEffect(() => {
-    // First, set the instant fallback URL from hardcoded map (no network needed)
+    // Reset loading state on component mount or cities change
+    setIsLoading(true);
+    setHasError(false);
+
+    // Get instant fallback URL first
     const fallbackUrl = getTripImageUrl(citiesRaw);
     setImageSrc(fallbackUrl);
 
-    // Then, try to upgrade to Unsplash image via async fetch with caching
+    // Then try to upgrade to Unsplash image via async fetch with caching
     getTripImageUrlAsync(citiesRaw)
       .then((url) => {
-        // Update image if the URL is different (upgraded to Unsplash or different cached result)
-        if (url !== imageSrc) {
-          setImageSrc(url);
-        }
+        setImageSrc(url);
+        setHasError(false); // Reset error state when we get a new URL
+        setIsLoading(false); // Mark as loaded when we have the final URL
       })
       .catch((error) => {
         console.error("Failed to load city image:", error);
-        // Fallback is already set, so we just log the error
+        setIsLoading(false); // Stop loading even on error
       });
   }, [citiesRaw]);
 
   const handleLoad = () => {
     setIsLoading(false);
+    setHasError(false);
   };
 
   const handleError = () => {
-    setIsLoading(false);
     setHasError(true);
+    setIsLoading(false);
   };
 
   const gradientColor = getGradientColor(tripName);
 
   return (
     <div className="absolute inset-0">
-      {isLoading && (
+      {isLoading && !hasError && (
         <div className={`absolute inset-0 bg-gradient-to-br ${gradientColor} opacity-80`} />
       )}
       {hasError ? (
         <div className={`absolute inset-0 bg-gradient-to-br ${gradientColor} opacity-80`} />
       ) : (
         <img
+          key={imageSrc}
           src={imageSrc}
           alt={tripName}
           className="w-full h-full object-cover"
