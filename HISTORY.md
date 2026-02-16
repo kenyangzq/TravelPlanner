@@ -1,5 +1,17 @@
 # TravelPlanner Change History
 
+## 2026-02-16: Add back button, city images, simplify forms, and fix Azure routing
+- Added back button (ArrowLeft icon) to trip detail page header for easy navigation back to trip list
+- Created `imageService.ts` with pre-defined Unsplash images for 60+ popular cities and 6 default travel-themed fallback images
+- Updated trip cards to display city photos instead of gradient placeholders, with loading states and error handling
+- Removed `destination` field from new trip form (cities field is sufficient)
+- Removed `cuisineType` and `confirmationNumber` fields from restaurant form
+- Removed `confirmationNumber` field from hotel form
+- **Critical Azure fix**: Added trailing slashes to all dynamic route navigation URLs (`/trips/${tripId}/`) to match `trailingSlash: true` config
+- This resolves "Trip Not Found" error on Azure Static Web Apps after creating trips
+- Improved Create Trip dialog UI with better padding, consistent spacing, and wider dialog (480px)
+- Files modified: `trip-detail-client.tsx`, `imageService.ts`, `trip-row.tsx`, `new-trip-dialog.tsx`, `restaurant-form.tsx`, `hotel-form.tsx`, `page.tsx`
+
 ## 2026-02-15: Force static export mode in GitHub Actions to avoid warmup timeout
 - Added `is_static_export: true` to Azure Static Web Apps deployment workflow
 - This forces Oryx (Azure's build engine) to treat the app as pure static export

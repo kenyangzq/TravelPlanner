@@ -58,10 +58,11 @@ export default function HomePage() {
       <main className="max-w-7xl mx-auto px-8 py-8">
         <TripList
           trips={trips}
-          onSelectTrip={(tripId) => router.push(`/trips/${tripId}`)}
+          onSelectTrip={(tripId) => router.push(`/trips/${tripId}/`)}
           onDeleteTrip={(tripId) =>
             setDeleteConfirmation({ type: "trip", id: tripId })
           }
+          onCreateTrip={() => setIsNewTripDialogOpen(true)}
         />
       </main>
 

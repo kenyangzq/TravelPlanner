@@ -47,10 +47,6 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({
       : 90
   );
   const [partySize, setPartySize] = useState(existingEvent?.partySize || 2);
-  const [cuisineType, setCuisineType] = useState(existingEvent?.cuisineType || "");
-  const [confirmationNumber, setConfirmationNumber] = useState(
-    existingEvent?.confirmationNumber || ""
-  );
   const [locationQuery, setLocationQuery] = useState(
     existingEvent?.restaurantName || existingEvent?.restaurantAddress || ""
   );
@@ -96,11 +92,11 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({
         endDate.toISOString()
       ),
       restaurantName: restaurantName.trim(),
-      cuisineType: cuisineType.trim(),
+      cuisineType: "",
       reservationTime: startDateTime,
       partySize,
       restaurantAddress: locationData.address,
-      confirmationNumber: confirmationNumber.trim(),
+      confirmationNumber: "",
       restaurantLatitude: locationData.latitude,
       restaurantLongitude: locationData.longitude,
     };
@@ -186,28 +182,6 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({
             onChange={setDuration}
           />
         </div>
-      </div>
-
-      <div>
-        <Label htmlFor="cuisine-type">Cuisine Type</Label>
-        <Input
-          id="cuisine-type"
-          type="text"
-          value={cuisineType}
-          onChange={(e) => setCuisineType(e.target.value)}
-          placeholder="e.g., Japanese, Italian"
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="confirmation-number">Confirmation Number</Label>
-        <Input
-          id="confirmation-number"
-          type="text"
-          value={confirmationNumber}
-          onChange={(e) => setConfirmationNumber(e.target.value)}
-          placeholder="Optional"
-        />
       </div>
 
       <div className="flex gap-2 pt-2">

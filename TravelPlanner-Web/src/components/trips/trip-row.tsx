@@ -7,6 +7,7 @@
 import * as React from "react";
 import { format, differenceInDays, parseISO } from "date-fns";
 import { MapPin, Calendar, MoreHorizontal, Plane, Hotel, Activity } from "lucide-react";
+import { getTripImageUrl } from "@/lib/services/imageService";
 
 interface TripRowProps {
   trip: {
@@ -40,6 +41,51 @@ const getGradientColor = (id: string) => {
   return gradients[index];
 };
 
+// Image component with loading state and fallback
+const TripImage: React.FC<{ citiesRaw: string; tripName: string }> = ({ citiesRaw, tripName }) => {
+  const [imageSrc, setImageSrc] = React.useState<string>("");
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [hasError, setHasError] = React.useState(false);
+
+  React.useEffect(() => {
+    // Get image URL based on cities
+    const imageUrl = getTripImageUrl(citiesRaw);
+    setImageSrc(imageUrl);
+  }, [citiesRaw]);
+
+  const handleLoad = () => {
+    setIsLoading(false);
+  };
+
+  const handleError = () => {
+    setIsLoading(false);
+    setHasError(true);
+  };
+
+  const gradientColor = getGradientColor(tripName);
+
+  return (
+    <div className="absolute inset-0">
+      {isLoading && (
+        <div className={`absolute inset-0 bg-gradient-to-br ${gradientColor} opacity-80`} />
+      )}
+      {hasError ? (
+        <div className={`absolute inset-0 bg-gradient-to-br ${gradientColor} opacity-80`} />
+      ) : (
+        <img
+          src={imageSrc}
+          alt={tripName}
+          className="w-full h-full object-cover"
+          onLoad={handleLoad}
+          onError={handleError}
+          style={{ opacity: isLoading ? 0 : 1, transition: 'opacity 0.3s' }}
+        />
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent" />
+    </div>
+  );
+};
+
 export const TripRow: React.FC<TripRowProps> = ({
   trip,
   eventCount,
@@ -52,7 +98,6 @@ export const TripRow: React.FC<TripRowProps> = ({
   const startDate = parseISO(trip.startDate);
   const today = new Date();
   const daysUntilTrip = differenceInDays(startDate, today);
-  const gradientColor = getGradientColor(trip.id);
 
   return (
     <div
@@ -61,7 +106,7 @@ export const TripRow: React.FC<TripRowProps> = ({
     >
       {/* Image Header */}
       <div className="h-48 relative overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800">
-        <div className={`absolute inset-0 bg-gradient-to-br ${gradientColor} opacity-80`} />
+        <TripImage citiesRaw={trip.citiesRaw} tripName={trip.name} />
 
         {/* Days Badge */}
         {daysUntilTrip > 0 && (

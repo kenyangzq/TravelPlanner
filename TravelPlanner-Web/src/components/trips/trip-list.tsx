@@ -16,6 +16,7 @@ interface TripListProps {
   trips: Trip[];
   onSelectTrip: (tripId: string) => void;
   onDeleteTrip: (tripId: string) => void;
+  onCreateTrip?: () => void;
 }
 
 interface TripEventCounts {
@@ -29,6 +30,7 @@ export const TripList: React.FC<TripListProps> = ({
   trips,
   onSelectTrip,
   onDeleteTrip,
+  onCreateTrip,
 }) => {
   // Fetch event counts for all trips by type
   const eventCounts = useLiveQuery(() => {
@@ -62,11 +64,7 @@ export const TripList: React.FC<TripListProps> = ({
         message="Create your first trip to start planning your adventure."
         action={{
           label: "Create Trip",
-          onClick: () => {
-            // This will be handled by parent component
-            const event = new CustomEvent("create-trip");
-            window.dispatchEvent(event);
-          },
+          onClick: () => onCreateTrip?.(),
         }}
       />
     );

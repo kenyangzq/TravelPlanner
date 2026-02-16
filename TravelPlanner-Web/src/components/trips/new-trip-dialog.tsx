@@ -36,7 +36,6 @@ export function NewTripDialog({
   const { setIsNewTripDialogOpen } = useUIStore();
 
   const [name, setName] = useState("");
-  const [destination, setDestination] = useState("");
   const [citiesInput, setCitiesInput] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -44,7 +43,6 @@ export function NewTripDialog({
 
   const resetForm = () => {
     setName("");
-    setDestination("");
     setCitiesInput("");
     setStartDate("");
     setEndDate("");
@@ -73,7 +71,7 @@ export function NewTripDialog({
 
       const tripId = await createTrip({
         name: name.trim(),
-        destination: destination.trim(),
+        destination: cities[0] || "",
         startDate,
         endDate,
         citiesRaw: formatCities(cities),
@@ -82,8 +80,8 @@ export function NewTripDialog({
       resetForm();
       onOpenChange(false);
 
-      // Navigate to the new trip
-      router.push(`/trips/${tripId}`);
+      // Navigate to the new trip (add trailing slash for static export compatibility)
+      router.push(`/trips/${tripId}/`);
     } catch (error) {
       console.error("Failed to create trip:", error);
     } finally {
@@ -109,15 +107,15 @@ export function NewTripDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-[480px] p-0">
         <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle>Create New Trip</DialogTitle>
+          <DialogHeader className="px-6 pt-6 pb-4">
+            <DialogTitle className="text-xl">Create New Trip</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
-            <div>
-              <Label htmlFor="trip-name">Trip Name</Label>
+          <div className="px-6 space-y-4 py-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="trip-name" className="text-sm font-medium">Trip Name</Label>
               <Input
                 id="trip-name"
                 type="text"
@@ -125,48 +123,40 @@ export function NewTripDialog({
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g., Summer Vacation 2025"
                 required
+                className="h-10"
               />
             </div>
 
-            <div>
-              <Label htmlFor="destination">Destination</Label>
-              <Input
-                id="destination"
-                type="text"
-                value={destination}
-                onChange={(e) => setDestination(e.target.value)}
-                placeholder="e.g., Paris, France"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="cities">Cities</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="cities" className="text-sm font-medium">Cities</Label>
               <Input
                 id="cities"
                 type="text"
                 value={citiesInput}
                 onChange={(e) => setCitiesInput(e.target.value)}
                 placeholder="e.g., Paris, Lyon, Nice"
+                className="h-10"
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Separate multiple cities with commas
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="start-date">Start Date</Label>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="start-date" className="text-sm font-medium">Start Date</Label>
                 <Input
                   id="start-date"
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
                   required
+                  className="h-10"
                 />
               </div>
 
-              <div>
-                <Label htmlFor="end-date">End Date</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="end-date" className="text-sm font-medium">End Date</Label>
                 <Input
                   id="end-date"
                   type="date"
@@ -174,23 +164,26 @@ export function NewTripDialog({
                   min={startDate}
                   onChange={(e) => setEndDate(e.target.value)}
                   required
+                  className="h-10"
                 />
               </div>
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="gap-3 px-6 pt-2 pb-6">
             <Button
               type="button"
-              variant="secondary"
+              variant="outline"
               onClick={handleClose}
               disabled={isSubmitting}
+              className="flex-1"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={!name.trim() || !startDate || !endDate || isSubmitting}
+              className="flex-1 bg-primary hover:bg-primary/90"
             >
               {isSubmitting ? "Creating..." : "Create Trip"}
             </Button>

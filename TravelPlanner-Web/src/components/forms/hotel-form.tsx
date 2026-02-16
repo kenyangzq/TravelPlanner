@@ -46,9 +46,6 @@ export const HotelForm: React.FC<HotelFormProps> = ({
   const [checkOutTime, setCheckOutTime] = useState(
     existingEvent?.checkOutDate ? existingEvent.checkOutDate.split("T")[1]?.slice(0, 5) || "11:00" : "11:00"
   );
-  const [confirmationNumber, setConfirmationNumber] = useState(
-    existingEvent?.confirmationNumber || ""
-  );
   const [locationQuery, setLocationQuery] = useState(
     existingEvent?.hotelName || existingEvent?.hotelAddress || ""
   );
@@ -92,7 +89,7 @@ export const HotelForm: React.FC<HotelFormProps> = ({
       checkInDate: startDateTime,
       checkOutDate: endDateTime,
       hotelAddress: locationData.address,
-      confirmationNumber: confirmationNumber.trim(),
+      confirmationNumber: "",
       hotelLatitude: locationData.latitude,
       hotelLongitude: locationData.longitude,
     };
@@ -180,17 +177,6 @@ export const HotelForm: React.FC<HotelFormProps> = ({
             onChange={(e) => setCheckOutTime(e.target.value)}
           />
         </div>
-      </div>
-
-      <div>
-        <Label htmlFor="confirmation-number">Confirmation Number</Label>
-        <Input
-          id="confirmation-number"
-          type="text"
-          value={confirmationNumber}
-          onChange={(e) => setConfirmationNumber(e.target.value)}
-          placeholder="Optional"
-        />
       </div>
 
       <div className="flex gap-2 pt-2">

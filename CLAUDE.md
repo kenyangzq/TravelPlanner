@@ -171,10 +171,14 @@ TravelPlanner-Web/
 - **Rate limiting**: Location search limited to 1 request per second (Nominatim policy)
 - **PWA installation**: Can be installed on iPhone via "Add to Home Screen" in Safari, runs in standalone mode
 - **Safe area handling**: CSS `env(safe-area-inset-*)` for iPhone notch/home indicator support
+- **Trip card images**: City-based Unsplash photos for 60+ popular destinations with 6 default travel-themed fallback images. Uses first city from trip's cities list.
+- **Back button navigation**: ArrowLeft button in trip detail header for easy navigation back to trip list
+- **Simplified forms**: Trip form no longer requires destination field (cities sufficient). Restaurant form removed cuisine/confirmation fields. Hotel form removed confirmation field.
 - **Daily reminders**: Short reminder notes stored in `reminders` IndexedDB table (Dexie DB version 3), keyed by `[tripId+dayKey]`. Uses `useReminders` hook for live queries. Feature implemented but currently hidden from UI (map sidebar with reminders was disabled).
 - **Day map view**: Interactive map using Leaflet + OpenStreetMap (no API key required) showing hotels (purple), restaurants (red), and flight airports filtered by day's city (blue). Map auto-fits bounds to show all markers. Feature implemented but currently hidden from UI.
 - **List view timeline**: Single-column layout with timeline dots and time labels. Events displayed in chronological order with navigation links between consecutive events.
 - **Calendar view event positioning**: Events are rendered directly inside the day column div (not inside per-slot divs) using `position: absolute` with `top` calculated as `(startHour - 6) * 64px`.
+- **Azure routing fix**: All dynamic route navigation URLs use trailing slashes (`/trips/${tripId}/`) to match `trailingSlash: true` production config, preventing "Trip Not Found" errors.
 
 ### API Configuration (Web)
 - RapidAPI key stored in `.env.local` → `NEXT_PUBLIC_RAPIDAPI_KEY` (baked into client bundle at build time)
