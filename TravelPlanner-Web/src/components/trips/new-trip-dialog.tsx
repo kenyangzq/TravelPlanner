@@ -23,6 +23,7 @@ import { useTrips } from "@/lib/hooks/useTrips";
 import { useUIStore } from "@/lib/store";
 import { useRouter } from "next/navigation";
 import { formatCities } from "@/lib/models";
+import { DateRangePicker } from "../ui/date-range-picker";
 
 export function NewTripDialog({
   open,
@@ -142,31 +143,16 @@ export function NewTripDialog({
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="start-date" className="text-sm font-medium">Start Date</Label>
-                <Input
-                  id="start-date"
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  required
-                  className="h-10"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="end-date" className="text-sm font-medium">End Date</Label>
-                <Input
-                  id="end-date"
-                  type="date"
-                  value={endDate}
-                  min={startDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  required
-                  className="h-10"
-                />
-              </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm font-medium">Trip Dates</Label>
+              <DateRangePicker
+                startDate={startDate}
+                endDate={endDate}
+                onRangeChange={(start, end) => {
+                  setStartDate(start);
+                  setEndDate(end);
+                }}
+              />
             </div>
           </div>
 

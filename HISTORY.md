@@ -1,5 +1,13 @@
 # TravelPlanner Change History
 
+## 2026-02-16: Fix dialog padding and add DateRangePicker calendar component
+- Fixed ConfirmDialog content padding — added `px-6 pt-6` to content wrapper so text doesn't touch edges
+- Created new `DateRangePicker` component (`src/components/ui/date-range-picker.tsx`) — calendar-based date range picker with month navigation, two-step selection, and range highlighting
+- Updated `NewTripDialog` to use DateRangePicker instead of two separate `<input type="date">` fields
+- Updated `HotelForm` to use DateRangePicker for check-in/check-out dates (time inputs remain separate)
+- Updated `CarRentalForm` to use DateRangePicker for pickup/return dates (time inputs remain separate)
+- Files modified: `confirm-dialog.tsx`, `date-range-picker.tsx` (new), `new-trip-dialog.tsx`, `hotel-form.tsx`, `car-rental-form.tsx`
+
 ## 2026-02-16: Add back button, city images, simplify forms, and fix Azure routing
 - Added back button (ArrowLeft icon) to trip detail page header for easy navigation back to trip list
 - Created `imageService.ts` with pre-defined Unsplash images for 60+ popular cities and 6 default travel-themed fallback images

@@ -18,6 +18,7 @@ import { useEvents } from "@/lib/hooks/useEvents";
 import type { Trip, CarRentalEvent } from "@/lib/models";
 import type { LocationResult } from "@/lib/services/locationService";
 import { Car } from "lucide-react";
+import { DateRangePicker } from "../ui/date-range-picker";
 
 interface CarRentalFormProps {
   tripId: string;
@@ -166,19 +167,21 @@ export const CarRentalForm: React.FC<CarRentalFormProps> = ({
         />
       </div>
 
+      <div>
+        <Label>Rental Dates *</Label>
+        <DateRangePicker
+          startDate={pickupDate}
+          endDate={returnDate}
+          onRangeChange={(start, end) => {
+            setPickupDate(start);
+            if (end) setReturnDate(end);
+          }}
+          minDate={trip.startDate}
+          maxDate={trip.endDate}
+        />
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="pickup-date">Pickup Date *</Label>
-          <Input
-            id="pickup-date"
-            type="date"
-            value={pickupDate}
-            onChange={(e) => setPickupDate(e.target.value)}
-            min={trip.startDate}
-            max={trip.endDate}
-            required
-          />
-        </div>
         <div>
           <Label htmlFor="pickup-time">Pickup Time</Label>
           <Input
@@ -186,6 +189,15 @@ export const CarRentalForm: React.FC<CarRentalFormProps> = ({
             type="time"
             value={pickupTime}
             onChange={(e) => setPickupTime(e.target.value)}
+          />
+        </div>
+        <div>
+          <Label htmlFor="return-time">Return Time</Label>
+          <Input
+            id="return-time"
+            type="time"
+            value={returnTime}
+            onChange={(e) => setReturnTime(e.target.value)}
           />
         </div>
       </div>
@@ -199,30 +211,6 @@ export const CarRentalForm: React.FC<CarRentalFormProps> = ({
           onLocationSelected={handleReturnLocationSelected}
           coordinateFields={returnLocationData}
         />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="return-date">Return Date *</Label>
-          <Input
-            id="return-date"
-            type="date"
-            value={returnDate}
-            onChange={(e) => setReturnDate(e.target.value)}
-            min={pickupDate}
-            max={trip.endDate}
-            required
-          />
-        </div>
-        <div>
-          <Label htmlFor="return-time">Return Time</Label>
-          <Input
-            id="return-time"
-            type="time"
-            value={returnTime}
-            onChange={(e) => setReturnTime(e.target.value)}
-          />
-        </div>
       </div>
 
       <div>

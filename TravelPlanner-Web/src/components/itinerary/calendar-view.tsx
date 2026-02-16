@@ -196,60 +196,50 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 className="w-32 flex-shrink-0 border-r dark:border-slate-700 relative"
                 style={{ height: `${timeSlots.length * 64}px` }}
               >
-                {/* Time slot rows with events */}
-                {timeSlots.map((slot) => {
-                  // Find events that start during this hour
-                  const slotEvents = dayEvents.filter((event) => {
-                    const eventStart = parseISO(event.startDate);
-                    const eventHour = eventStart.getHours();
-                    return eventHour === slot.hour;
-                  });
+                {/* Time slot grid lines */}
+                {timeSlots.map((slot) => (
+                  <div
+                    key={slot.hour}
+                    className="h-16 border-b dark:border-gray-800"
+                  />
+                ))}
+
+                {/* Render events positioned absolutely within the day column */}
+                {dayEvents.map((event) => {
+                  const style = getEventStyle(event);
+                  const isFlight = isFlightEvent(event);
+                  const color = getEventColor(event.eventType);
+
+                  const bgColors = {
+                    blue: "bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800",
+                    red: "bg-red-100 dark:bg-red-900/30 border-red-200 dark:border-red-800",
+                    orange: "bg-orange-100 dark:bg-orange-900/30 border-orange-200 dark:border-orange-800",
+                    green: "bg-green-100 dark:bg-green-900/30 border-green-200 dark:border-green-800",
+                    purple: "bg-purple-100 dark:bg-purple-900/30 border-purple-200 dark:border-purple-800",
+                  };
 
                   return (
                     <div
-                      key={slot.hour}
-                      className="h-16 border-b dark:border-gray-800 relative"
+                      key={event.id}
+                      className={`absolute left-0.5 right-0.5 rounded-lg shadow-sm hover:shadow-md transition-all p-1.5 cursor-pointer z-[1] ${bgColors[color as keyof typeof bgColors]}`}
+                      style={style}
+                      onClick={() => onEventClick(event.id)}
                     >
-                      {/* Render events */}
-                      {slotEvents.map((event) => {
-                        const style = getEventStyle(event);
-                        const isFlight = isFlightEvent(event);
-                        const color = getEventColor(event.eventType);
-
-                        // Color mapping
-                        const bgColors = {
-                          blue: "bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800",
-                          red: "bg-red-100 dark:bg-red-900/30 border-red-200 dark:border-red-800",
-                          orange: "bg-orange-100 dark:bg-orange-900/30 border-orange-200 dark:border-orange-800",
-                          green: "bg-green-100 dark:bg-green-900/30 border-green-200 dark:border-green-800",
-                          purple: "bg-purple-100 dark:bg-purple-900/30 border-purple-200 dark:border-purple-800",
-                        };
-
-                        return (
-                          <div
-                            key={event.id}
-                            className={`absolute left-0.5 right-0.5 rounded-lg shadow-sm hover:shadow-md transition-all p-1.5 cursor-pointer ${bgColors[color as keyof typeof bgColors]}`}
-                            style={style}
-                            onClick={() => onEventClick(event.id)}
-                          >
-                            <div className="flex items-start gap-1.5">
-                              {isFlight ? (
-                                <Plane className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-                              ) : (
-                                <span className="w-3.5 h-3.5 bg-current opacity-60 rounded-full flex-shrink-0 mt-0.5" />
-                              )}
-                              <div className="flex-1 min-w-0">
-                                <div className="text-xs font-bold text-slate-900 dark:text-slate-100 leading-tight break-words">
-                                  {event.title}
-                                </div>
-                                <div className="text-xs font-medium text-slate-700 dark:text-slate-300 mt-0.5">
-                                  {format(parseISO(event.startDate), "h:mm a")}
-                                </div>
-                              </div>
-                            </div>
+                      <div className="flex items-start gap-1.5">
+                        {isFlight ? (
+                          <Plane className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                        ) : (
+                          <span className="w-3.5 h-3.5 bg-current opacity-60 rounded-full flex-shrink-0 mt-0.5" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="text-xs font-bold text-slate-900 dark:text-slate-100 leading-tight break-words">
+                            {event.title}
                           </div>
-                        );
-                      })}
+                          <div className="text-xs font-medium text-slate-700 dark:text-slate-300 mt-0.5">
+                            {format(parseISO(event.startDate), "h:mm a")}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   );
                 })}

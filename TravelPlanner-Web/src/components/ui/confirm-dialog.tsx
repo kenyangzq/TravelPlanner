@@ -35,7 +35,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-sm">
-        <div className="mb-4">
+        <div className="px-6 pt-6 mb-4">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
             {title}
           </h3>

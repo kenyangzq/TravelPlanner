@@ -18,6 +18,7 @@ import { useEvents } from "@/lib/hooks/useEvents";
 import type { Trip, HotelEvent } from "@/lib/models";
 import type { LocationResult } from "@/lib/services/locationService";
 import { Building2, MapPin } from "lucide-react";
+import { DateRangePicker } from "../ui/date-range-picker";
 
 interface HotelFormProps {
   tripId: string;
@@ -131,19 +132,21 @@ export const HotelForm: React.FC<HotelFormProps> = ({
         coordinateFields={locationData}
       />
 
+      <div>
+        <Label>Stay Dates *</Label>
+        <DateRangePicker
+          startDate={checkInDate}
+          endDate={checkOutDate}
+          onRangeChange={(start, end) => {
+            setCheckInDate(start);
+            if (end) setCheckOutDate(end);
+          }}
+          minDate={trip.startDate}
+          maxDate={trip.endDate}
+        />
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="check-in-date">Check-in Date *</Label>
-          <Input
-            id="check-in-date"
-            type="date"
-            value={checkInDate}
-            onChange={(e) => setCheckInDate(e.target.value)}
-            min={trip.startDate}
-            max={trip.endDate}
-            required
-          />
-        </div>
         <div>
           <Label htmlFor="check-in-time">Check-in Time</Label>
           <Input
@@ -151,21 +154,6 @@ export const HotelForm: React.FC<HotelFormProps> = ({
             type="time"
             value={checkInTime}
             onChange={(e) => setCheckInTime(e.target.value)}
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="check-out-date">Check-out Date *</Label>
-          <Input
-            id="check-out-date"
-            type="date"
-            value={checkOutDate}
-            onChange={(e) => setCheckOutDate(e.target.value)}
-            min={checkInDate}
-            max={trip.endDate}
-            required
           />
         </div>
         <div>
