@@ -134,6 +134,13 @@ export interface Reminder {
   updatedAt: string; // ISO date string
 }
 
+// Cached city image from Unsplash
+export interface ImageCache {
+  city: string; // Lowercase trimmed city name (primary key)
+  url: string; // Unsplash image URL
+  fetchedAt: string; // ISO timestamp when image was fetched
+}
+
 // Day map location markers
 export interface DayMapLocation {
   id: string;

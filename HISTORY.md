@@ -1,5 +1,18 @@
 # TravelPlanner Change History
 
+## 2026-02-16: Dynamic city images via Unsplash API with IndexedDB caching
+- Added `imageCache` table to Dexie DB (version 4) with schema: `city, url, fetchedAt`
+- Rewrote `imageService.ts` with cache-first async strategy:
+  - `getCityImageUrlAsync()` and `getTripImageUrlAsync()` functions that:
+    1. Check hardcoded map (+ aliases + substring) → return immediately if found
+    2. Check IndexedDB cache → return if cached
+    3. Fetch from Unsplash API if `NEXT_PUBLIC_UNSPLASH_ACCESS_KEY` is set, cache result, return URL
+    4. Fall back to deterministic default image (hash-based, not random, for stability)
+- Updated `TripImage` component in `trip-row.tsx` to use async flow with instant fallback
+- Changed default image selection from random to hash-based for stability across renders
+- App works gracefully without Unsplash API key (falls back to hardcoded map + defaults)
+- Files modified: `src/lib/db.ts`, `src/lib/services/imageService.ts`, `src/components/trips/trip-row.tsx`, `CLAUDE.md`
+
 ## 2026-02-16: Mobile UI responsiveness fixes across the web app
 - **Trip detail header**: Shortened "Add Event" → "Add" and "Export" → icon-only on mobile. Reduced padding, hid MapPin icon on small screens, added `truncate` to trip name. Fixed sticky view toggle `top` offset to match smaller mobile header.
 - **Calendar view**: Merged date header and body into a single scroll container so headers scroll horizontally with content. Reduced column width from 128px to 80px on mobile, slot height from 64px to 40px. Made event blocks more compact with smaller text and hidden time labels on mobile. Added responsive `slotHeight` state that updates on window resize.

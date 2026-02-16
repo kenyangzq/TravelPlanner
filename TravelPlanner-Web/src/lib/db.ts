@@ -16,6 +16,7 @@ import {
   ActivityEvent,
   CarRentalEvent,
   Reminder,
+  ImageCache,
 } from "./models";
 
 /**
@@ -25,6 +26,7 @@ export class TravelPlannerDB extends Dexie {
   trips!: Table<Trip, string>;
   events!: Table<TripEvent, string>;
   reminders!: Table<Reminder, string>;
+  imageCache!: Table<ImageCache, string>;
 
   constructor() {
     super("TravelPlannerDB");
@@ -57,6 +59,14 @@ export class TravelPlannerDB extends Dexie {
           updatedAt: n.updatedAt,
         })));
       });
+    });
+
+    // Version 4: Add imageCache for Unsplash city images
+    this.version(4).stores({
+      trips: "id, startDate, createdAt",
+      events: "id, tripId, eventType, [tripId+startDate]",
+      reminders: "id, tripId, [tripId+dayKey]",
+      imageCache: "city, url, fetchedAt",
     });
   }
 }

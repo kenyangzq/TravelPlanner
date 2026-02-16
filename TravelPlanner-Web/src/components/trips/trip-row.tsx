@@ -7,7 +7,7 @@
 import * as React from "react";
 import { format, differenceInDays, parseISO } from "date-fns";
 import { MapPin, Calendar, MoreHorizontal, Plane, Hotel, Activity } from "lucide-react";
-import { getTripImageUrl } from "@/lib/services/imageService";
+import { getTripImageUrl, getTripImageUrlAsync } from "@/lib/services/imageService";
 
 interface TripRowProps {
   trip: {
@@ -48,9 +48,22 @@ const TripImage: React.FC<{ citiesRaw: string; tripName: string }> = ({ citiesRa
   const [hasError, setHasError] = React.useState(false);
 
   React.useEffect(() => {
-    // Get image URL based on cities
-    const imageUrl = getTripImageUrl(citiesRaw);
-    setImageSrc(imageUrl);
+    // First, set the instant fallback URL from hardcoded map (no network needed)
+    const fallbackUrl = getTripImageUrl(citiesRaw);
+    setImageSrc(fallbackUrl);
+
+    // Then, try to upgrade to Unsplash image via async fetch with caching
+    getTripImageUrlAsync(citiesRaw)
+      .then((url) => {
+        // Update image if the URL is different (upgraded to Unsplash or different cached result)
+        if (url !== imageSrc) {
+          setImageSrc(url);
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to load city image:", error);
+        // Fallback is already set, so we just log the error
+      });
   }, [citiesRaw]);
 
   const handleLoad = () => {

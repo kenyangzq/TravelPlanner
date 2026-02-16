@@ -1,8 +1,10 @@
 /**
  * TravelPlanner Web - Image Service
  *
- * Fetches travel-related images from Unsplash.
+ * Fetches travel-related images from Unsplash with IndexedDB caching.
  */
+
+import { db } from "@/lib/db";
 
 // Default travel-themed image URLs as fallback
 const DEFAULT_TRAVEL_IMAGES = [
@@ -101,8 +103,9 @@ const CITY_ALIASES: Record<string, string> = {
 };
 
 /**
- * Get an image URL for a given city.
+ * Get an image URL for a given city (synchronous, no network call).
  * Tries exact match, then aliases, then substring matching against known cities.
+ * Returns a deterministic default image for unknown cities (not random).
  */
 export function getCityImageUrl(city: string): string {
   const normalizedCity = city.toLowerCase().trim();
@@ -125,14 +128,14 @@ export function getCityImageUrl(city: string): string {
     }
   }
 
-  // For unknown cities, return a random default travel image
-  const randomIndex = Math.floor(Math.random() * DEFAULT_TRAVEL_IMAGES.length);
-  return DEFAULT_TRAVEL_IMAGES[randomIndex];
+  // For unknown cities, return a deterministic default based on string hash (stable across renders)
+  const hash = city.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return DEFAULT_TRAVEL_IMAGES[hash % DEFAULT_TRAVEL_IMAGES.length];
 }
 
 /**
- * Get an image URL for a trip based on its cities.
- * Uses the first city, or a random travel image if no cities are specified.
+ * Get an image URL for a trip based on its cities (synchronous, no network call).
+ * Uses the first city, or a deterministic default image if no cities are specified.
  */
 export function getTripImageUrl(citiesRaw: string): string {
   const cities = citiesRaw.split("|").filter((c) => c.length > 0);
@@ -141,15 +144,114 @@ export function getTripImageUrl(citiesRaw: string): string {
     return getCityImageUrl(cities[0]);
   }
 
-  // No cities specified, use a random travel image
-  const randomIndex = Math.floor(Math.random() * DEFAULT_TRAVEL_IMAGES.length);
-  return DEFAULT_TRAVEL_IMAGES[randomIndex];
+  // No cities specified, use first default image
+  return DEFAULT_TRAVEL_IMAGES[0];
 }
 
 /**
- * Fetch a city image from Unsplash API (optional enhancement).
+ * Get an image URL for a given city with async caching.
+ * This function implements a cache-first strategy:
+ * 1. Check hardcoded map (+ aliases + substring) → return immediately if found
+ * 2. Check IndexedDB cache → return if cached
+ * 3. If NEXT_PUBLIC_UNSPLASH_ACCESS_KEY is set, fetch from Unsplash API, cache result, return URL
+ * 4. Fall back to deterministic default image (hash-based, stable across renders)
+ *
+ * @param city - The city name to fetch an image for
+ * @returns Promise<string> - The image URL
+ */
+export async function getCityImageUrlAsync(city: string): Promise<string> {
+  const normalizedCity = city.toLowerCase().trim();
+
+  // 1. Check hardcoded map (+ aliases + substring) for instant result
+  if (CITY_IMAGE_MAP[normalizedCity]) {
+    return CITY_IMAGE_MAP[normalizedCity];
+  }
+
+  const aliasKey = CITY_ALIASES[normalizedCity];
+  if (aliasKey && CITY_IMAGE_MAP[aliasKey]) {
+    return CITY_IMAGE_MAP[aliasKey];
+  }
+
+  for (const key of Object.keys(CITY_IMAGE_MAP)) {
+    if (normalizedCity.includes(key) || key.includes(normalizedCity)) {
+      return CITY_IMAGE_MAP[key];
+    }
+  }
+
+  // 2. Check IndexedDB cache
+  try {
+    const cached = await db.imageCache.get(normalizedCity);
+    if (cached) {
+      return cached.url;
+    }
+  } catch (error) {
+    console.error("Failed to read from image cache:", error);
+  }
+
+  // 3. Fetch from Unsplash API if key is available
+  const accessKey = process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY;
+  if (accessKey) {
+    try {
+      const response = await fetch(
+        `https://api.unsplash.com/search/photos?query=${encodeURIComponent(
+          city + " city travel"
+        )}&per_page=1&client_id=${accessKey}`
+      );
+
+      if (!response.ok) {
+        throw new Error(`Unsplash API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data.results && data.results.length > 0) {
+        const imageUrl = data.results[0].urls.regular;
+
+        // Cache the result in IndexedDB
+        try {
+          await db.imageCache.put({
+            city: normalizedCity,
+            url: imageUrl,
+            fetchedAt: new Date().toISOString(),
+          });
+        } catch (cacheError) {
+          console.error("Failed to cache image:", cacheError);
+        }
+
+        return imageUrl;
+      }
+    } catch (error) {
+      console.error("Failed to fetch image from Unsplash:", error);
+    }
+  }
+
+  // 4. Fall back to deterministic default image (hash-based, not random)
+  const hash = city.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return DEFAULT_TRAVEL_IMAGES[hash % DEFAULT_TRAVEL_IMAGES.length];
+}
+
+/**
+ * Get an image URL for a trip based on its cities with async caching.
+ * Uses the first city, or a deterministic default image if no cities are specified.
+ *
+ * @param citiesRaw - Pipe-delimited string of cities
+ * @returns Promise<string> - The image URL
+ */
+export async function getTripImageUrlAsync(citiesRaw: string): Promise<string> {
+  const cities = citiesRaw.split("|").filter((c) => c.length > 0);
+
+  if (cities.length > 0) {
+    return getCityImageUrlAsync(cities[0]);
+  }
+
+  // No cities specified, use first default image
+  return DEFAULT_TRAVEL_IMAGES[0];
+}
+
+/**
+ * Fetch a city image from Unsplash API (legacy function, kept for compatibility).
  * Requires NEXT_PUBLIC_UNSPLASH_ACCESS_KEY to be set.
- * This is not currently used but can be enabled for dynamic image fetching.
+ * @deprecated Use getCityImageUrlAsync() instead for better caching.
  */
 export async function fetchCityImageFromUnsplash(
   city: string

@@ -171,7 +171,7 @@ TravelPlanner-Web/
 - **Rate limiting**: Location search limited to 1 request per second (Nominatim policy)
 - **PWA installation**: Can be installed on iPhone via "Add to Home Screen" in Safari, runs in standalone mode
 - **Safe area handling**: CSS `env(safe-area-inset-*)` for iPhone notch/home indicator support
-- **Trip card images**: City-based Unsplash photos for 60+ popular destinations with 6 default travel-themed fallback images. Uses first city from trip's cities list.
+- **Trip card images**: City-based Unsplash photos with dynamic fetching via Unsplash API and IndexedDB caching. Hardcoded map provides instant results for 60+ popular destinations (no network needed). Unknown cities fetch from Unsplash API (if `NEXT_PUBLIC_UNSPLASH_ACCESS_KEY` is set) and are cached in IndexedDB for instant subsequent loads. Falls back to 6 default travel-themed images. Uses first city from trip's cities list.
 - **Back button navigation**: ArrowLeft button in trip detail header for easy navigation back to trip list
 - **Simplified forms**: Trip form no longer requires destination field (cities sufficient). Restaurant form removed cuisine/confirmation fields. Hotel form removed confirmation field.
 - **DateRangePicker component**: Custom calendar picker (`src/components/ui/date-range-picker.tsx`) built with `date-fns`. Two-step selection (click start, click end), range highlighting, month navigation. Used in NewTripDialog, HotelForm, and CarRentalForm instead of separate `<input type="date">` fields.
@@ -186,6 +186,10 @@ TravelPlanner-Web/
 - RapidAPI key stored in `.env.local` → `NEXT_PUBLIC_RAPIDAPI_KEY` (baked into client bundle at build time)
 - Called directly from client-side flightService.ts (no server proxy)
 - Free tier: ~300 calls/month on AeroDataBox
+- Unsplash access key (optional) stored in `.env.local` → `NEXT_PUBLIC_UNSPLASH_ACCESS_KEY` (for dynamic city images)
+- If Unsplash key is not set, app gracefully falls back to hardcoded city images (~60 cities) + default travel photos
+- City images are cached in IndexedDB (imageCache table) so each city is fetched once
+- Free tier: 50 requests/hour on Unsplash API (https://unsplash.com/developers)
 
 ### Build & Run (Web)
 ```bash
