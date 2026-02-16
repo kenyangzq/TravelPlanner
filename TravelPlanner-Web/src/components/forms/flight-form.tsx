@@ -18,6 +18,7 @@ import {
   dbHelpers,
 } from "@/lib/db";
 import { useEvents } from "@/lib/hooks/useEvents";
+import { searchFlight } from "@/lib/services/flightService";
 import type { Trip, FlightEvent } from "@/lib/models";
 import { Search, Loader2, AlertCircle, Plane } from "lucide-react";
 
@@ -55,14 +56,7 @@ export const FlightForm: React.FC<FlightFormProps> = ({
     setError(null);
 
     try {
-      // Call Next.js API route to search flight
-      const response = await fetch(`/api/flights?number=${encodeURIComponent(flightNumber)}&date=${date}`);
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to search flight");
-      }
-
+      const data = await searchFlight({ number: flightNumber, date });
       setFetchedData(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to search flight");

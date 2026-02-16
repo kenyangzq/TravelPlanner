@@ -135,9 +135,6 @@ TravelPlanner-Web/
 │   │   │       └── flights/
 │   │   │           └── [eventId]/
 │   │   │               └── page.tsx      # Flight detail
-│   │   └── api/
-│   │       └── flights/
-│   │           └── route.ts              # AeroDataBox proxy
 │   ├── components/
 │   │   ├── trips/                        # Trip list and creation
 │   │   ├── itinerary/                    # List and calendar views
@@ -154,24 +151,26 @@ TravelPlanner-Web/
 ├── public/
 │   └── icons/                            # PWA icons
 ├── package.json
-├── next.config.js                        # PWA config
+├── next.config.js                        # PWA + static export config
 ├── tailwind.config.ts
 ├── tsconfig.json
-└── .env.local                            # RAPIDAPI_KEY
+└── .env.local                            # NEXT_PUBLIC_RAPIDAPI_KEY
 ```
 
 ### Key Architecture Decisions (Web)
+- **Static export**: Uses `output: 'export'` in next.config.js to generate static HTML/JS/CSS in `out/` directory. No server-side rendering or API routes. Required for Azure Static Web Apps deployment.
 - **Discriminated unions**: Unlike iOS class inheritance, web uses TypeScript discriminated unions with `eventType` field to differentiate event types
 - **IndexedDB persistence**: All data stored locally in browser via Dexie.js, no server database required
 - **State separation**: Data state (Dexie) separate from UI state (Zustand) - mirrors iOS SwiftData + @Observable pattern
+- **Client-side flight API**: Flight search calls AeroDataBox directly from the browser (no API route proxy). API key exposed via `NEXT_PUBLIC_RAPIDAPI_KEY` — acceptable for personal app.
 - **City-biased location search**: Nominatim API with viewbox bounding box around trip cities for better results (~50km radius)
 - **Rate limiting**: Location search limited to 1 request per second (Nominatim policy)
 - **PWA installation**: Can be installed on iPhone via "Add to Home Screen" in Safari, runs in standalone mode
 - **Safe area handling**: CSS `env(safe-area-inset-*)` for iPhone notch/home indicator support
 
 ### API Configuration (Web)
-- RapidAPI key stored in `.env.local` → `RAPIDAPI_KEY` (gitignored)
-- Proxied through Next.js API route (`/api/flights`) to hide key from client
+- RapidAPI key stored in `.env.local` → `NEXT_PUBLIC_RAPIDAPI_KEY` (baked into client bundle at build time)
+- Called directly from client-side flightService.ts (no server proxy)
 - Free tier: ~300 calls/month on AeroDataBox
 
 ### Build & Run (Web)
@@ -203,9 +202,11 @@ See `TravelPlanner-Web/DEPLOYMENT.md` for comprehensive Azure deployment guide, 
 | Sheet presentation | Dialog/Modal components |
 
 ### Web App Recent Changes
+- **2026-02-15**: Switched to static export (`output: 'export'`) for Azure Static Web Apps compatibility. Moved flight API from server-side API route to client-side direct calls via `NEXT_PUBLIC_RAPIDAPI_KEY`. Deleted `/api/flights/route.ts`. Updated GitHub Actions workflow to use `out/` output directory. Updated eslint-config-next to match next version, removed `@types/uuid`.
 - **2026-02-15**: Complete PWA implementation - ported all iOS features to Next.js/React with TypeScript. Includes trip management, 5 event types, location search with city biasing, flight API integration, calendar view with time-positioned events, and PWA configuration for iPhone installation.
 - **2026-02-15**: Improved location search with city-based bounding box biasing - now uses Nominatim viewbox parameter to prioritize results within ~50km of trip cities, with deduplication by coordinate proximity (~100m) and sorting by importance.
 - **2026-02-15**: Fixed calendar view to display flight events with plane icons at actual time positions - events now show in correct time slots (6 AM - 11 PM) with color-coded backgrounds by event type and proper flight indicators.
+- **2026-02-15**: Fixed edit dialog stretching full width on desktop - added `sm:max-w-lg` to dialog container in `dialog.tsx` so modals are properly constrained on larger screens while remaining full-width bottom sheets on mobile.
 
 ## Recent Changes (iOS)
 - **2026-02-15**: Created companion web app (PWA) version in TravelPlanner-Web/ directory with full feature parity to iOS app. See [Web App Implementation](#web-app-implementation) section above for details.

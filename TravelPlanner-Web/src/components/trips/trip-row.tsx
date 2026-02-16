@@ -1,16 +1,12 @@
 /**
  * TravelPlanner Web - Trip Row Component
  *
- * Single trip row in the trip list.
- * Port of iOS TripRowView.swift.
+ * Single trip card matching StitchUI design.
  */
 
 import * as React from "react";
-import { format, parseISO } from "date-fns";
-import { parseCities } from "@/lib/models";
-import { formatDateRange } from "@/lib/utils/dateFormatters";
-import { Badge } from "../ui/badge";
-import { MapPin, Calendar, Trash2 } from "lucide-react";
+import { format, differenceInDays, parseISO } from "date-fns";
+import { MapPin, Calendar, MoreHoriz, Flight, Hotel, Activity } from "lucide-react";
 
 interface TripRowProps {
   trip: {
@@ -22,60 +18,107 @@ interface TripRowProps {
     citiesRaw: string;
     createdAt: string;
   };
+  eventCount: number;
+  flightCount?: number;
+  hotelCount?: number;
+  activityCount?: number;
   onSelect: () => void;
   onDelete: () => void;
 }
 
-export const TripRow: React.FC<TripRowProps> = ({ trip, onSelect, onDelete }) => {
-  const cities = parseCities(trip.citiesRaw);
+// Generate gradient color based on trip ID for image placeholder
+const getGradientColor = (id: string) => {
+  const gradients = [
+    "from-blue-400 to-blue-600",
+    "from-purple-400 to-purple-600",
+    "from-emerald-400 to-emerald-600",
+    "from-orange-400 to-orange-600",
+    "from-pink-400 to-pink-600",
+    "from-cyan-400 to-cyan-600",
+  ];
+  const index = parseInt(id.slice(-1), 16) % gradients.length;
+  return gradients[index];
+};
+
+export const TripRow: React.FC<TripRowProps> = ({
+  trip,
+  eventCount,
+  flightCount = 0,
+  hotelCount = 0,
+  activityCount = 0,
+  onSelect,
+  onDelete
+}) => {
+  const startDate = parseISO(trip.startDate);
+  const today = new Date();
+  const daysUntilTrip = differenceInDays(startDate, today);
+  const gradientColor = getGradientColor(trip.id);
 
   return (
     <div
-      className="bg-white dark:bg-gray-900 rounded-lg border p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+      className="group bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border border-primary/5 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300 cursor-pointer"
       onClick={onSelect}
     >
-      <div className="flex items-start justify-between">
-        <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
-            {trip.name}
-          </h3>
+      {/* Image Header */}
+      <div className="h-48 relative overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800">
+        <div className={`absolute inset-0 bg-gradient-to-br ${gradientColor} opacity-80`} />
 
-          <div className="flex items-center gap-2 mt-1">
-            <MapPin className="w-4 h-4 text-gray-500 flex-shrink-0" />
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              {trip.destination || "No destination"}
-            </span>
+        {/* Days Badge */}
+        {daysUntilTrip > 0 && (
+          <div className="absolute top-4 right-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm px-3 py-1.5 rounded-lg text-xs font-bold text-primary">
+            IN {daysUntilTrip} DAYS
           </div>
+        )}
 
-          <div className="flex items-center gap-2 mt-1">
-            <Calendar className="w-4 h-4 text-gray-500 flex-shrink-0" />
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              {formatDateRange(trip.startDate, trip.endDate)}
-            </span>
+        {/* Destination Label */}
+        <div className="absolute bottom-4 left-4 right-4">
+          <h3 className="text-2xl font-bold text-white drop-shadow-lg">{trip.name}</h3>
+          <p className="text-sm text-white/90 flex items-center gap-1 mt-1">
+            <MapPin className="w-4 h-4" />
+            {trip.destination || "Trip"}
+          </p>
+        </div>
+      </div>
+
+      {/* Card Body */}
+      <div className="p-6">
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <p className="text-sm text-slate-500 flex items-center gap-1">
+              <Calendar className="w-4 h-4" />
+              {format(startDate, "MMM d")} — {format(parseISO(trip.endDate), "MMM d, yyyy")}
+            </p>
           </div>
-
-          {cities.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2">
-              {cities.map((city, index) => (
-                <Badge key={index} variant="default" className="text-xs">
-                  {city}
-                </Badge>
-              ))}
-            </div>
-          )}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            className="text-slate-400 hover:text-primary transition-colors"
+          >
+            <MoreHoriz className="w-5 h-5" />
+          </button>
         </div>
 
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
-          className="p-2 text-gray-400 hover:text-red-600 transition-colors flex-shrink-0"
-          aria-label="Delete trip"
-        >
-          <Trash2 className="w-5 h-5" />
-        </button>
+        {/* Event Count Badges */}
+        <div className="flex flex-wrap gap-2">
+          {flightCount > 0 && (
+            <span className="px-3 py-1 bg-primary/5 text-primary text-xs font-semibold rounded-full flex items-center gap-1">
+              <Flight className="w-3 h-3" /> {flightCount} Flight{flightCount > 1 ? "s" : ""}
+            </span>
+          )}
+          {hotelCount > 0 && (
+            <span className="px-3 py-1 bg-primary/5 text-primary text-xs font-semibold rounded-full flex items-center gap-1">
+              <Hotel className="w-3 h-3" /> {hotelCount} Hotel{hotelCount > 1 ? "s" : ""}
+            </span>
+          )}
+          {activityCount > 0 && (
+            <span className="px-3 py-1 bg-primary/5 text-primary text-xs font-semibold rounded-full flex items-center gap-1">
+              <Activity className="w-3 h-3" /> {activityCount} Activit{activityCount > 1 ? "ies" : "y"}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );

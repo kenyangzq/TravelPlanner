@@ -36,12 +36,13 @@ export const ListView: React.FC<ListViewProps> = ({
   }
 
   return (
-    <div className="space-y-6">
-      {eventsByDay.map(({ date, items, dayHotel }) => (
+    <div>
+      {eventsByDay.map(({ date, items, dayHotel }, index) => (
         <DaySection
           key={date.toISOString()}
           tripId={tripId}
           date={date}
+          dayNumber={index + 1}
           items={items}
           dayHotel={dayHotel}
           onEventClick={onEventClick}

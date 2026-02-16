@@ -7,6 +7,7 @@
 
 "use client";
 
+import { format, parseISO } from "date-fns";
 import { useEventsByDay, useTripHotels } from "@/lib/hooks/useTripDetail";
 import { useTrips } from "@/lib/hooks/useTrips";
 import { useUIStore } from "@/lib/store";
@@ -15,8 +16,10 @@ import { CalendarView } from "@/components/itinerary/calendar-view";
 import { AddEventDialog } from "@/components/forms/add-event-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
-import { Plus, List, Calendar, ArrowLeft, MapPin } from "lucide-react";
+import { Plus, List, Calendar, ArrowLeft, MapPin, Download } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { downloadICS } from "@/lib/utils/calendarExport";
+import { useEvents } from "@/lib/hooks/useEvents";
 
 interface PageProps {
   params: { tripId: string };
@@ -32,6 +35,13 @@ export default function TripDetailPage({ params }: PageProps) {
   const trip = trips.find((t) => t.id === tripId);
   const eventsByDay = useEventsByDay(tripId);
   const hotels = useTripHotels(tripId);
+  const { events } = useEvents(tripId);
+
+  const handleExportCalendar = () => {
+    if (trip) {
+      downloadICS(trip, events);
+    }
+  };
 
   if (!trip) {
     return (
@@ -58,74 +68,76 @@ export default function TripDetailPage({ params }: PageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-20">
+    <div className="min-h-screen bg-[#f6f7f8] dark:bg-[#111921] pb-20">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b px-4 py-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center gap-2 mb-3">
-            <button
-              onClick={() => router.push("/")}
-              className="p-1 -ml-1 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <div className="flex-1">
-              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 truncate">
-                {trip.name}
-              </h1>
-              <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
-                <MapPin className="w-3 h-3" />
-                <span>{trip.destination || "No destination"}</span>
-              </div>
-            </div>
+      <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-primary/10 px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="bg-primary p-2 rounded-lg">
+            <MapPin className="w-5 h-5 text-white" />
           </div>
-
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              {eventsByDay.reduce((sum, day) => sum + day.items.length, 0)} events
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+              {trip.name}
+            </h1>
+            <p className="text-xs text-slate-500 font-medium">
+              {format(parseISO(trip.startDate), "MMM d")} — {format(parseISO(trip.endDate), "MMM d, yyyy")}
             </p>
-            <div className="flex items-center gap-2">
-              {/* View mode toggle */}
-              <div className="flex items-center border rounded-md overflow-hidden">
-                <button
-                  onClick={() => useUIStore.getState().setItineraryViewMode("list")}
-                  className={`p-2 ${
-                    useUIStore.getState().itineraryViewMode === "list"
-                      ? "bg-blue-600 text-white"
-                      : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400"
-                  }`}
-                >
-                  <List className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => useUIStore.getState().setItineraryViewMode("calendar")}
-                  className={`p-2 ${
-                    useUIStore.getState().itineraryViewMode === "calendar"
-                      ? "bg-blue-600 text-white"
-                      : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400"
-                  }`}
-                >
-                  <Calendar className="w-4 h-4" />
-                </button>
-              </div>
-
-              <Button
-                size="sm"
-                onClick={() => {
-                  useUIStore.getState().setSelectedEventType(null);
-                  setIsAddEventOpen(true);
-                }}
-              >
-                <Plus className="w-4 h-4 mr-1" />
-                Add Event
-              </Button>
-            </div>
           </div>
+        </div>
+        <div className="flex items-center gap-3">
+          {/* Export calendar button */}
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={handleExportCalendar}
+            className="text-primary hover:bg-primary/5"
+          >
+            <Download className="w-4 h-4 mr-1" />
+            Export
+          </Button>
+
+          <Button
+            size="sm"
+            onClick={() => {
+              useUIStore.getState().setSelectedEventType(null);
+              setIsAddEventOpen(true);
+            }}
+            className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
+          >
+            <Plus className="w-4 h-4 mr-1" />
+            Add Event
+          </Button>
         </div>
       </header>
 
+      {/* View mode toggle */}
+      <div className="sticky top-20 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-b border-primary/10 px-6 py-2">
+        <div className="max-w-3xl mx-auto flex items-center gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg w-fit">
+          <button
+            onClick={() => useUIStore.getState().setItineraryViewMode("list")}
+            className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${
+              useUIStore.getState().itineraryViewMode === "list"
+                ? "bg-white dark:bg-primary text-primary dark:text-white shadow-sm"
+                : "text-slate-500 hover:bg-white/50 dark:hover:bg-slate-700"
+            }`}
+          >
+            List
+          </button>
+          <button
+            onClick={() => useUIStore.getState().setItineraryViewMode("calendar")}
+            className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${
+              useUIStore.getState().itineraryViewMode === "calendar"
+                ? "bg-white dark:bg-primary text-primary dark:text-white shadow-sm"
+                : "text-slate-500 hover:bg-white/50 dark:hover:bg-slate-700"
+            }`}
+          >
+            Calendar
+          </button>
+        </div>
+      </div>
+
       {/* Content */}
-      <main className="max-w-4xl mx-auto px-4 py-6">
+      <main className="max-w-3xl mx-auto py-8 px-6">
         {useUIStore.getState().itineraryViewMode === "list" ? (
           <ListView
             tripId={tripId}

@@ -8,7 +8,7 @@
 import * as React from "react";
 import { format, eachDayOfInterval, parseISO, startOfDay, isSameDay } from "date-fns";
 import { EmptyState } from "../ui/empty-state";
-import { Calendar, MapPin, Plane, ExternalLink } from "lucide-react";
+import { Calendar, MapPin, Plane, ExternalLink, Trash2 } from "lucide-react";
 import type { Trip, HotelEvent, TripEvent } from "@/lib/models";
 import type { EventsByDayResult } from "@/lib/hooks/useTripDetail";
 import { getEventIcon, getEventColor } from "@/lib/models";
@@ -70,7 +70,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
     // Map to 6 AM - 11 PM range (18 slots)
     const topOffset = Math.max(0, startHour - 6) * 64; // 64px per hour
-    const height = Math.max(64, (endHour - startHour) * 64); // Minimum 64px (1 hour)
+    const height = Math.max(80, (endHour - startHour) * 64); // Minimum 80px for better text display
 
     return {
       top: `${topOffset}px`,
@@ -79,31 +79,96 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-lg border overflow-hidden">
-      {/* Calendar header with day columns */}
-      <div className="sticky top-0 z-10 bg-gray-100 dark:bg-gray-800 border-b">
-        <div className="flex min-w-max">
-          {/* Time column header */}
-          <div className="w-16 flex-shrink-0 p-2 text-xs font-medium text-gray-500 dark:text-gray-400 text-center">
-            Time
+    <div className="space-y-6">
+      {/* Hotels Section - Separate block above calendar */}
+      {hotels.length > 0 && (
+        <div className="bg-white dark:bg-slate-900 rounded-xl border-2 border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+          <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-gradient-to-r from-purple-50 to-purple-100/50 dark:from-purple-900/20 dark:to-purple-900/10">
+            <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              Accommodations
+            </h3>
           </div>
-
-          {/* Day columns */}
-          {tripDays.map((day) => (
-            <div
-              key={day.toISOString()}
-              className="w-32 flex-shrink-0 p-2 text-center border-l dark:border-gray-700"
-            >
-              <div className="text-xs font-medium text-gray-900 dark:text-gray-100">
-                {format(day, "EEE")}
+          <div className="p-6 grid gap-4">
+            {hotels.map((hotel) => (
+              <div
+                key={hotel.id}
+                className="relative bg-gradient-to-r from-purple-50 to-purple-100/50 dark:from-purple-900/20 dark:to-purple-900/10 border border-purple-200 dark:border-purple-800 rounded-xl p-4 hover:shadow-md transition-all cursor-pointer group"
+                onClick={() => onEventClick(hotel.id)}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    <div className="w-12 h-12 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0">
+                      <Calendar className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-bold text-slate-800 dark:text-white text-lg mb-1">
+                        {hotel.hotelName}
+                      </h4>
+                      <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
+                        <span>
+                          Check-in: {format(parseISO(hotel.checkInDate), "MMM d, yyyy")}
+                        </span>
+                        <span>→</span>
+                        <span>
+                          Check-out: {format(parseISO(hotel.checkOutDate), "MMM d, yyyy")}
+                        </span>
+                      </div>
+                      {hotel.hotelAddress && (
+                        <p className="text-sm text-slate-500 dark:text-slate-500 mt-1">
+                          {hotel.hotelAddress}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteEvent(hotel.id);
+                    }}
+                    className="p-2 text-slate-400 hover:text-red-600 transition-colors opacity-0 group-hover:opacity-100"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
-              <div className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                {format(day, "d")}
-              </div>
-            </div>
-          ))}
+            ))}
+            {hotels.length === 0 && (
+              <p className="text-sm text-slate-500 text-center py-4">
+                No accommodations booked for this trip
+              </p>
+            )}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Calendar Grid */}
+      <div className="bg-white dark:bg-slate-900 rounded-xl border-2 border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+        {/* Calendar header with day columns */}
+        <div className="sticky top-0 z-10 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-slate-800 dark:to-slate-900 border-b">
+          <div className="flex min-w-max">
+            {/* Time column header */}
+            <div className="w-16 flex-shrink-0 p-2 text-xs font-medium text-slate-500 dark:text-slate-400 text-center">
+              Time
+            </div>
+
+            {/* Day columns */}
+            {tripDays.map((day) => (
+              <div
+                key={day.toISOString()}
+                className="w-32 flex-shrink-0 p-2 text-center border-l dark:border-slate-700"
+              >
+                <div className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
+                  {format(day, "EEE")}
+                </div>
+                <div className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-0.5">
+                  {format(day, "d")}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
 
       {/* Scrollable calendar body */}
       <div className="overflow-x-auto overflow-y-auto max-h-[800px]">
@@ -122,35 +187,15 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
           {/* Day columns */}
           {tripDays.map((day) => {
-            // Find hotels for this day
-            const dayHotels = hotels.filter((hotel) => {
-              const checkIn = startOfDay(parseISO(hotel.checkInDate));
-              const checkOut = startOfDay(parseISO(hotel.checkOutDate));
-              return checkIn <= day && day <= checkOut;
-            });
-
             // Get non-hotel events for this day
             const dayEvents = getDayEvents(day);
 
             return (
               <div
                 key={day.toISOString()}
-                className="w-32 flex-shrink-0 border-r dark:border-gray-700 relative"
+                className="w-32 flex-shrink-0 border-r dark:border-slate-700 relative"
                 style={{ height: `${timeSlots.length * 64}px` }}
               >
-                {/* Hotel banners at top */}
-                {dayHotels.map((hotel) => (
-                  <div
-                    key={hotel.id}
-                    className="absolute top-0 left-0 right-0 bg-purple-100 dark:bg-purple-900/30 border-b border-purple-200 dark:border-purple-800 p-1 text-xs z-10"
-                  >
-                    <div className="font-medium text-purple-900 dark:text-purple-100 truncate flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {hotel.hotelName}
-                    </div>
-                  </div>
-                ))}
-
                 {/* Time slot rows with events */}
                 {timeSlots.map((slot) => {
                   // Find events that start during this hour
@@ -183,22 +228,24 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                         return (
                           <div
                             key={event.id}
-                            className={`absolute left-1 right-1 rounded border p-1 cursor-pointer hover:opacity-80 transition-opacity ${bgColors[color as keyof typeof bgColors]}`}
+                            className={`absolute left-0.5 right-0.5 rounded-lg shadow-sm hover:shadow-md transition-all p-1.5 cursor-pointer ${bgColors[color as keyof typeof bgColors]}`}
                             style={style}
                             onClick={() => onEventClick(event.id)}
                           >
-                            <div className="flex items-center gap-1 mb-0.5">
+                            <div className="flex items-start gap-1.5">
                               {isFlight ? (
-                                <Plane className="w-3 h-3 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                                <Plane className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
                               ) : (
-                                <span className="w-3 h-3 bg-current opacity-50 rounded-full flex-shrink-0" />
+                                <span className="w-3.5 h-3.5 bg-current opacity-60 rounded-full flex-shrink-0 mt-0.5" />
                               )}
-                              <span className="text-xs font-medium text-gray-900 dark:text-gray-100 truncate">
-                                {event.title}
-                              </span>
-                            </div>
-                            <div className="text-xs text-gray-600 dark:text-gray-400 truncate">
-                              {format(parseISO(event.startDate), "h:mm a")}
+                              <div className="flex-1 min-w-0">
+                                <div className="text-xs font-bold text-slate-900 dark:text-slate-100 leading-tight break-words">
+                                  {event.title}
+                                </div>
+                                <div className="text-xs font-medium text-slate-700 dark:text-slate-300 mt-0.5">
+                                  {format(parseISO(event.startDate), "h:mm a")}
+                                </div>
+                              </div>
                             </div>
                           </div>
                         );
@@ -211,6 +258,8 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           })}
         </div>
       </div>
+        </div>
+      {/* End Calendar Grid */}
     </div>
   );
 };
