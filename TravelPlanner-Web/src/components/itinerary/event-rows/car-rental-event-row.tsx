@@ -9,22 +9,26 @@ import * as React from "react";
 import { format } from "date-fns";
 import { Car, MapPin, Trash2, ExternalLink } from "lucide-react";
 import { formatTime } from "@/lib/utils/dateFormatters";
+import { buildLocationSearchLink } from "@/lib/utils/navigationLinks";
 import type { ItineraryItem, CarRentalEvent } from "@/lib/models";
 
 interface CarRentalEventRowProps {
   item: ItineraryItem;
   onClick: () => void;
   onDelete: () => void;
+  tripCities?: string[];
 }
 
 export const CarRentalEventRow: React.FC<CarRentalEventRowProps> = ({
   item,
   onClick,
   onDelete,
+  tripCities = [],
 }) => {
   const event = item.event as CarRentalEvent;
   const pickupTime = formatTime(event.startDate);
   const returnTime = formatTime(event.endDate);
+  const locationLink = React.useMemo(() => buildLocationSearchLink(event), [event]);
 
   return (
     <div
@@ -60,20 +64,23 @@ export const CarRentalEventRow: React.FC<CarRentalEventRowProps> = ({
         <div>Return: {event.returnLocationName || event.returnAirportCode || "TBD"}</div>
       </div>
 
-      {/* Navigation link */}
-      {item.navigationToEvent && (
-        <a
-          href={item.navigationToEvent.directionsURL || undefined}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-2 text-xs font-bold text-primary hover:underline"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <MapPin className="w-4 h-4" />
-          Navigate to pickup
-          <ExternalLink className="w-3 h-3" />
-        </a>
-      )}
+      {/* Links section */}
+      <div className="flex flex-wrap gap-2">
+        {/* Location link - opens Google Place page with reviews */}
+        {locationLink && (
+          <a
+            href={locationLink.locationURL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <MapPin className="w-3.5 h-3.5" />
+            Maps
+            <ExternalLink className="w-2.5 h-2.5" />
+          </a>
+        )}
+      </div>
     </div>
   );
 };

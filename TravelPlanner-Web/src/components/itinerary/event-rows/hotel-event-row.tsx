@@ -7,24 +7,28 @@
 
 import * as React from "react";
 import { format } from "date-fns";
-import { Building2, MapPin, Trash2, ExternalLink } from "lucide-react";
+import { Building2, MapPin, Trash2, ExternalLink, Search } from "lucide-react";
 import { formatTime } from "@/lib/utils/dateFormatters";
+import { buildLocationSearchLink } from "@/lib/utils/navigationLinks";
 import type { ItineraryItem, HotelEvent } from "@/lib/models";
 
 interface HotelEventRowProps {
   item: ItineraryItem;
   onClick: () => void;
   onDelete: () => void;
+  tripCities?: string[];
 }
 
 export const HotelEventRow: React.FC<HotelEventRowProps> = ({
   item,
   onClick,
   onDelete,
+  tripCities = [],
 }) => {
   const event = item.event as HotelEvent;
   const checkInTime = formatTime(event.startDate);
   const checkOutTime = formatTime(event.endDate);
+  const locationLink = React.useMemo(() => buildLocationSearchLink(event), [event]);
 
   return (
     <div
@@ -72,20 +76,38 @@ export const HotelEventRow: React.FC<HotelEventRowProps> = ({
         <p className="text-xs text-slate-500 mb-4">{event.hotelAddress}</p>
       )}
 
-      {/* Navigation link */}
-      {item.navigationToEvent && (
-        <a
-          href={item.navigationToEvent.directionsURL || undefined}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-2 text-xs font-bold text-primary hover:underline"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <MapPin className="w-4 h-4" />
-          Navigate to hotel
-          <ExternalLink className="w-3 h-3" />
-        </a>
-      )}
+      {/* Links section */}
+      <div className="flex flex-wrap gap-2">
+        {/* Location link - opens Google Place page with reviews */}
+        {locationLink && (
+          <a
+            href={locationLink.locationURL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <MapPin className="w-3.5 h-3.5" />
+            Maps
+            <ExternalLink className="w-2.5 h-2.5" />
+          </a>
+        )}
+
+        {/* RedNote link */}
+        {event.googlePlaceName && tripCities.length > 0 && (
+          <a
+            href={`https://www.xiaohongshu.com/search_result?keyword=${encodeURIComponent(event.googlePlaceName + " " + tripCities[0])}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-red-600 hover:text-red-700 hover:underline"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Search className="w-3.5 h-3.5" />
+            RedNote
+            <ExternalLink className="w-2.5 h-2.5" />
+          </a>
+        )}
+      </div>
     </div>
   );
 };

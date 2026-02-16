@@ -22,7 +22,9 @@ import {
 import {
   directionsURLFromCurrentLocation,
   directionsURLFromCurrentLocationToCoords,
+  buildLocationLink,
 } from "../services/mapsService";
+import { buildGoogleReviewsURL, buildRedNoteSearchURL } from "../services/reviewsService";
 
 /**
  * Extract start coordinate from an event
@@ -323,4 +325,107 @@ export function findHotelsForDay(
     const checkOut = new Date(hotel.checkOutDate).setHours(0, 0, 0, 0);
     return checkIn <= day && day <= checkOut;
   });
+}
+
+/**
+ * Build a location search link for an event (opens in Google Maps)
+ * This opens the Google Place page if place_id is available (shows reviews, photos, etc.)
+ */
+export function buildLocationSearchLink(
+  event: TripEvent
+): { locationLabel: string; locationURL: string } | null {
+  let name: string | undefined;
+  let address: string | undefined;
+  let lat: number | undefined;
+  let lng: number | undefined;
+  let placeId: string | undefined;
+
+  if (isHotelEvent(event)) {
+    name = event.hotelName;
+    address = event.hotelAddress;
+    lat = event.hotelLatitude;
+    lng = event.hotelLongitude;
+    placeId = event.googlePlaceId;
+  } else if (isRestaurantEvent(event)) {
+    name = event.restaurantName;
+    address = event.restaurantAddress;
+    lat = event.restaurantLatitude;
+    lng = event.restaurantLongitude;
+    placeId = event.googlePlaceId;
+  } else if (isActivityEvent(event)) {
+    name = event.activityLocationName;
+    address = undefined;
+    lat = event.activityLatitude;
+    lng = event.activityLongitude;
+    placeId = event.googlePlaceId;
+  } else if (isFlightEvent(event)) {
+    // For flights, link to arrival airport
+    name = event.arrivalAirportName || event.arrivalAirportIATA;
+    lat = event.arrivalLatitude;
+    lng = event.arrivalLongitude;
+  } else if (isCarRentalEvent(event)) {
+    name = event.pickupLocationName;
+    lat = event.pickupLatitude;
+    lng = event.pickupLongitude;
+  }
+
+  const url = buildLocationLink(name, address, lat, lng, placeId);
+  if (!url) return null;
+
+  return {
+    locationLabel: name || "Location",
+    locationURL: url,
+  };
+}
+
+/**
+ * Build review links for an event (Google Reviews and RedNote)
+ * Returns URLs for both platforms if location data is available
+ */
+export function buildReviewLinks(
+  event: TripEvent,
+  tripCities: string[] = []
+): { googleReviews: string | null; redNote: string | null } {
+  let name: string | undefined;
+  let googlePlaceName: string | undefined; // Official Google Places name
+  let address: string | undefined;
+  let lat: number | undefined;
+  let lng: number | undefined;
+
+  // Extract location data based on event type
+  if (isHotelEvent(event)) {
+    name = event.hotelName;
+    googlePlaceName = event.googlePlaceName; // Use official Google Places name if available
+    address = event.hotelAddress;
+    lat = event.hotelLatitude;
+    lng = event.hotelLongitude;
+  } else if (isRestaurantEvent(event)) {
+    name = event.restaurantName;
+    googlePlaceName = event.googlePlaceName; // Use official Google Places name if available
+    address = event.restaurantAddress;
+    lat = event.restaurantLatitude;
+    lng = event.restaurantLongitude;
+  } else if (isActivityEvent(event)) {
+    name = event.activityLocationName;
+    googlePlaceName = event.googlePlaceName; // Use official Google Places name if available
+    address = undefined;
+    lat = event.activityLatitude;
+    lng = event.activityLongitude;
+  } else if (isCarRentalEvent(event)) {
+    name = event.pickupLocationName; // Use rental company location
+    lat = event.pickupLatitude;
+    lng = event.pickupLongitude;
+  } else {
+    // Flight events don't have reviewable places
+    return { googleReviews: null, redNote: null };
+  }
+
+  // Build Google Reviews URL
+  const googleReviews = buildGoogleReviewsURL(name, address, lat, lng);
+
+  // Build RedNote URL using Google Places name if available (more accurate), otherwise fall back to user-entered name
+  const redNoteName = googlePlaceName || name;
+  const redNote = redNoteName ? buildRedNoteSearchURL(redNoteName, tripCities) : null;
+
+  return { googleReviews, redNote };
 }

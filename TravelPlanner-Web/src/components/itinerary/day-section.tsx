@@ -9,13 +9,12 @@
 
 import * as React from "react";
 import { format, parseISO } from "date-fns";
-import { Building2, MapPin, ExternalLink, StickyNote, Pencil } from "lucide-react";
+import { Building2, StickyNote, Pencil } from "lucide-react";
 import { FlightEventRow } from "./event-rows/flight-event-row";
 import { HotelEventRow } from "./event-rows/hotel-event-row";
 import { RestaurantEventRow } from "./event-rows/restaurant-event-row";
 import { ActivityEventRow } from "./event-rows/activity-event-row";
 import { CarRentalEventRow } from "./event-rows/car-rental-event-row";
-import { DayMap, extractDayMapLocations } from "./day-map";
 import type { ItineraryItem, DayHotelInfo, Reminder } from "@/lib/models";
 
 interface DaySectionProps {
@@ -49,12 +48,6 @@ export const DaySection: React.FC<DaySectionProps> = ({
   const [reminderText, setReminderText] = React.useState(reminder?.content ?? "");
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const dayKey = format(date, "yyyy-MM-dd");
-
-  // Calculate map locations for this day
-  const mapLocations = React.useMemo(
-    () => extractDayMapLocations(items, dayHotel, tripCities),
-    [items, dayHotel, tripCities]
-  );
 
   React.useEffect(() => {
     setReminderText(reminder?.content ?? "");
@@ -105,27 +98,14 @@ export const DaySection: React.FC<DaySectionProps> = ({
               </span>
               <div className="absolute -left-[5px] top-5 w-3 h-3 rounded-full bg-primary ring-4 ring-white dark:ring-slate-950" />
               <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex justify-between items-start">
-                  <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <Building2 className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-base text-slate-900 dark:text-white">{dayHotel.hotel.hotelName}</h3>
-                      <p className="text-sm text-slate-500">You're staying here</p>
-                    </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Building2 className="w-5 h-5 text-primary" />
                   </div>
-                  {dayHotel.navigationToHotel && (
-                    <a
-                      href={dayHotel.navigationToHotel.directionsURL || undefined}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-2 text-primary hover:bg-primary/5 rounded-lg transition-colors"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <MapPin className="w-5 h-5" />
-                    </a>
-                  )}
+                  <div>
+                    <h3 className="font-bold text-base text-slate-900 dark:text-white">{dayHotel.hotel.hotelName}</h3>
+                    <p className="text-sm text-slate-500">You're staying here</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -137,72 +117,55 @@ export const DaySection: React.FC<DaySectionProps> = ({
             const showTimelineDot = !dayHotel || index > 0;
 
             return (
-              <React.Fragment key={item.id}>
-                <div className="relative pl-6 sm:pl-8 pb-6">
-                  {showTimelineDot && (
-                    <>
-                      <span className="absolute -left-[2.5rem] sm:-left-[3.5rem] top-4 w-[2rem] sm:w-[2.75rem] text-right pr-1 sm:pr-3 text-[9px] sm:text-[10px] font-semibold text-slate-400 dark:text-slate-500 leading-tight">
-                        {format(parseISO(event.startDate), "h:mma")}
-                      </span>
-                      <div className="absolute -left-[5px] top-5 w-3 h-3 rounded-full bg-primary ring-4 ring-white dark:ring-slate-950" />
-                    </>
-                  )}
-                  {event.eventType === "flight" && (
-                    <FlightEventRow
-                      item={item}
-                      onClick={() => onEventClick(event.id)}
-                      onDelete={() => onDeleteEvent(event.id)}
-                    />
-                  )}
-                  {event.eventType === "hotel" && (
-                    <HotelEventRow
-                      item={item}
-                      onClick={() => onEventClick(event.id)}
-                      onDelete={() => onDeleteEvent(event.id)}
-                    />
-                  )}
-                  {event.eventType === "restaurant" && (
-                    <RestaurantEventRow
-                      item={item}
-                      onClick={() => onEventClick(event.id)}
-                      onDelete={() => onDeleteEvent(event.id)}
-                    />
-                  )}
-                  {event.eventType === "activity" && (
-                    <ActivityEventRow
-                      item={item}
-                      onClick={() => onEventClick(event.id)}
-                      onDelete={() => onDeleteEvent(event.id)}
-                    />
-                  )}
-                  {event.eventType === "carRental" && (
-                    <CarRentalEventRow
-                      item={item}
-                      onClick={() => onEventClick(event.id)}
-                      onDelete={() => onDeleteEvent(event.id)}
-                    />
-                  )}
-                </div>
-
-                {/* Navigation link to next event */}
-                {item.navigationToEvent && item.navigationToEvent.directionsURL && (
-                  <div className="relative pl-6 sm:pl-8 pb-6">
-                    <a
-                      href={item.navigationToEvent.directionsURL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-3 py-1.5 text-primary hover:bg-primary/5 rounded-lg transition-colors font-semibold text-sm"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <MapPin className="w-3.5 h-3.5" />
-                      <span>
-                        {item.navigationToEvent.destinationLabel || "Navigate to next event"}
-                      </span>
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
-                  </div>
+              <div key={item.id} className="relative pl-6 sm:pl-8 pb-6">
+                {showTimelineDot && (
+                  <>
+                    <span className="absolute -left-[2.5rem] sm:-left-[3.5rem] top-4 w-[2rem] sm:w-[2.75rem] text-right pr-1 sm:pr-3 text-[9px] sm:text-[10px] font-semibold text-slate-400 dark:text-slate-500 leading-tight">
+                      {format(parseISO(event.startDate), "h:mma")}
+                    </span>
+                    <div className="absolute -left-[5px] top-5 w-3 h-3 rounded-full bg-primary ring-4 ring-white dark:ring-slate-950" />
+                  </>
                 )}
-              </React.Fragment>
+                {event.eventType === "flight" && (
+                  <FlightEventRow
+                    item={item}
+                    onClick={() => onEventClick(event.id)}
+                    onDelete={() => onDeleteEvent(event.id)}
+                  />
+                )}
+                {event.eventType === "hotel" && (
+                  <HotelEventRow
+                    item={item}
+                    onClick={() => onEventClick(event.id)}
+                    onDelete={() => onDeleteEvent(event.id)}
+                    tripCities={tripCities}
+                  />
+                )}
+                {event.eventType === "restaurant" && (
+                  <RestaurantEventRow
+                    item={item}
+                    onClick={() => onEventClick(event.id)}
+                    onDelete={() => onDeleteEvent(event.id)}
+                    tripCities={tripCities}
+                  />
+                )}
+                {event.eventType === "activity" && (
+                  <ActivityEventRow
+                    item={item}
+                    onClick={() => onEventClick(event.id)}
+                    onDelete={() => onDeleteEvent(event.id)}
+                    tripCities={tripCities}
+                  />
+                )}
+                {event.eventType === "carRental" && (
+                  <CarRentalEventRow
+                    item={item}
+                    onClick={() => onEventClick(event.id)}
+                    onDelete={() => onDeleteEvent(event.id)}
+                    tripCities={tripCities}
+                  />
+                )}
+              </div>
             );
           })}
       </div>

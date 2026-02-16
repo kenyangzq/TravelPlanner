@@ -55,10 +55,13 @@ export const LocationSearchSection: React.FC<LocationSearchSectionProps> = ({
     setSearchResults(null);
 
     try {
+      console.log("Searching for:", query, "in cities:", cities);
       const results = await searchPlaces(query, cities);
 
+      console.log("Search results:", results);
+
       if (results.length === 0) {
-        setError("No results found");
+        setError("No results found. Try a different search term or search on Google Maps.");
       } else if (results.length === 1) {
         // Auto-select if only one result
         onLocationSelected(results[0]);
@@ -68,8 +71,8 @@ export const LocationSearchSection: React.FC<LocationSearchSectionProps> = ({
         setSearchResults(results);
       }
     } catch (err) {
-      setError("Failed to search for location");
-      console.error(err);
+      console.error("Search error:", err);
+      setError(`Failed to search: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setIsSearching(false);
     }
@@ -189,9 +192,9 @@ export const LocationSearchSection: React.FC<LocationSearchSectionProps> = ({
         </div>
       )}
 
-      {/* OSM attribution */}
+      {/* Google attribution */}
       <div className="mt-2 text-xs text-gray-400">
-        © OpenStreetMap contributors
+        Powered by Google Places
       </div>
     </div>
   );

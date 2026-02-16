@@ -52,12 +52,16 @@ export const ActivityForm: React.FC<ActivityFormProps> = ({
   );
   const [locationData, setLocationData] = useState<{
     locationName: string;
+    googlePlaceName?: string;
+    googlePlaceId?: string;
     latitude?: number;
     longitude?: number;
   }>(
     existingEvent
       ? {
           locationName: existingEvent.activityLocationName,
+          googlePlaceName: existingEvent.googlePlaceName,
+          googlePlaceId: existingEvent.googlePlaceId,
           latitude: existingEvent.activityLatitude,
           longitude: existingEvent.activityLongitude,
         }
@@ -67,12 +71,14 @@ export const ActivityForm: React.FC<ActivityFormProps> = ({
   const isEditing = existingEvent !== null;
 
   const handleLocationSelected = (result: LocationResult) => {
-    const shortName = result.address.name || result.display_name.split(",")[0];
+    const shortName = result.name || result.formatted_address.split(",")[0];
     setLocationQuery(shortName);
     setLocationData({
       locationName: shortName,
-      latitude: parseFloat(result.lat),
-      longitude: parseFloat(result.lon),
+      googlePlaceName: result.name, // Store official Google Places name
+      googlePlaceId: result.place_id, // Store place_id for direct map links
+      latitude: result.lat,
+      longitude: result.lng,
     });
   };
 
@@ -89,6 +95,8 @@ export const ActivityForm: React.FC<ActivityFormProps> = ({
       ...createDefaultActivityEvent(tripId, title.trim(), startDateTime, endDate.toISOString()),
       title: title.trim(),
       activityLocationName: locationData.locationName,
+      googlePlaceName: locationData.googlePlaceName,
+      googlePlaceId: locationData.googlePlaceId,
       activityDescription: description.trim(),
       activityLatitude: locationData.latitude,
       activityLongitude: locationData.longitude,

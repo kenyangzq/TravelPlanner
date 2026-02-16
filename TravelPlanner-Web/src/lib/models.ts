@@ -77,6 +77,8 @@ export interface FlightEvent extends BaseEvent {
 export interface HotelEvent extends BaseEvent {
   eventType: "hotel";
   hotelName: string;
+  googlePlaceName?: string; // Official Google Places name for review searches
+  googlePlaceId?: string; // Google Places place_id for direct map links
   checkInDate: string; // ISO date string
   checkOutDate: string; // ISO date string
   hotelLatitude?: number;
@@ -89,6 +91,8 @@ export interface HotelEvent extends BaseEvent {
 export interface RestaurantEvent extends BaseEvent {
   eventType: "restaurant";
   restaurantName: string;
+  googlePlaceName?: string; // Official Google Places name for review searches
+  googlePlaceId?: string; // Google Places place_id for direct map links
   cuisineType: string;
   reservationTime: string; // ISO date string
   partySize: number;
@@ -102,6 +106,8 @@ export interface RestaurantEvent extends BaseEvent {
 export interface ActivityEvent extends BaseEvent {
   eventType: "activity";
   activityLocationName: string;
+  googlePlaceName?: string; // Official Google Places name for review searches
+  googlePlaceId?: string; // Google Places place_id for direct map links
   activityLatitude?: number;
   activityLongitude?: number;
   activityDescription: string;

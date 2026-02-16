@@ -13,6 +13,7 @@ import { useTrips } from "@/lib/hooks/useTrips";
 import { useUIStore } from "@/lib/store";
 import { ListView } from "@/components/itinerary/list-view";
 import { CalendarView } from "@/components/itinerary/calendar-view";
+import { TripMapView } from "@/components/itinerary/trip-map-view";
 import { AddEventDialog } from "@/components/forms/add-event-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
@@ -211,6 +212,16 @@ export function TripDetailClient({ tripId: propTripId }: TripDetailClientProps) 
           >
             Calendar
           </button>
+          <button
+            onClick={() => useUIStore.getState().setItineraryViewMode("map")}
+            className={`px-4 py-2 rounded-md text-sm font-semibold transition-all ${
+              useUIStore.getState().itineraryViewMode === "map"
+                ? "bg-white dark:bg-primary text-primary dark:text-white shadow-sm"
+                : "text-slate-500 hover:bg-white/50 dark:hover:bg-slate-700"
+            }`}
+          >
+            Map
+          </button>
         </div>
       </div>
 
@@ -233,7 +244,7 @@ export function TripDetailClient({ tripId: propTripId }: TripDetailClientProps) 
               setDeleteConfirmation({ type: "event", id: eventId })
             }
           />
-        ) : (
+        ) : useUIStore.getState().itineraryViewMode === "calendar" ? (
           <CalendarView
             tripId={tripId}
             trip={trip}
@@ -252,6 +263,8 @@ export function TripDetailClient({ tripId: propTripId }: TripDetailClientProps) 
               setDeleteConfirmation({ type: "event", id: eventId })
             }
           />
+        ) : (
+          <TripMapView trip={trip} events={events} hotels={hotels} />
         )}
       </main>
 

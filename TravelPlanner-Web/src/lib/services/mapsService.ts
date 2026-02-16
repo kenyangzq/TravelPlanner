@@ -111,3 +111,44 @@ export function locationURL(
   const encoded = label ? encodeURIComponent(label) : "";
   return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}${encoded ? `&query=${encoded}` : ""}`;
 }
+
+/**
+ * Build Google Maps search or pin URL based on available data
+ * Prioritizes place_id (direct to place page), then name+address search, then coordinates
+ */
+export function buildLocationLink(
+  name?: string,
+  address?: string,
+  lat?: number,
+  lng?: number,
+  place_id?: string
+): string | null {
+  // Use place_id if available (direct link to Google Place page with reviews)
+  if (place_id) {
+    return `https://www.google.com/maps/place/?api=1&place_id=${place_id}`;
+  }
+
+  // Use name + address search (opens place page with reviews)
+  if (name && address) {
+    const query = encodeURIComponent(`${name} ${address}`);
+    return `https://www.google.com/maps/search/?api=1&query=${query}`;
+  }
+
+  // Use name only
+  if (name) {
+    const query = encodeURIComponent(name);
+    return `https://www.google.com/maps/search/?api=1&query=${query}`;
+  }
+
+  // Use address only
+  if (address) {
+    return searchURL(address);
+  }
+
+  // Fall back to coordinates (just a pin, not tied to a business)
+  if (lat !== undefined && lng !== undefined) {
+    return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+  }
+
+  return null;
+}

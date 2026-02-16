@@ -52,12 +52,16 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({
   );
   const [locationData, setLocationData] = useState<{
     address: string;
+    googlePlaceName?: string;
+    googlePlaceId?: string;
     latitude?: number;
     longitude?: number;
   }>(
     existingEvent
       ? {
           address: existingEvent.restaurantAddress,
+          googlePlaceName: existingEvent.googlePlaceName,
+          googlePlaceId: existingEvent.googlePlaceId,
           latitude: existingEvent.restaurantLatitude,
           longitude: existingEvent.restaurantLongitude,
         }
@@ -67,11 +71,13 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({
   const isEditing = existingEvent !== null;
 
   const handleLocationSelected = (result: LocationResult) => {
-    setLocationQuery(result.display_name);
+    setLocationQuery(result.name);
     setLocationData({
-      address: result.display_name,
-      latitude: parseFloat(result.lat),
-      longitude: parseFloat(result.lon),
+      address: result.formatted_address,
+      googlePlaceName: result.name, // Store official Google Places name
+      googlePlaceId: result.place_id, // Store place_id for direct map links
+      latitude: result.lat,
+      longitude: result.lng,
     });
   };
 
@@ -92,6 +98,8 @@ export const RestaurantForm: React.FC<RestaurantFormProps> = ({
         endDate.toISOString()
       ),
       restaurantName: restaurantName.trim(),
+      googlePlaceName: locationData.googlePlaceName,
+      googlePlaceId: locationData.googlePlaceId,
       cuisineType: "",
       reservationTime: startDateTime,
       partySize,

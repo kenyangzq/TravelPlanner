@@ -11,6 +11,7 @@ import { Plane, MapPin, Trash2, ExternalLink } from "lucide-react";
 import { Badge } from "../../ui/badge";
 import { NavigationLinkRow } from "../navigation-link-row";
 import { formatTime } from "@/lib/utils/dateFormatters";
+import { buildLocationLink } from "@/lib/services/mapsService";
 import type { ItineraryItem, FlightEvent } from "@/lib/models";
 
 interface FlightEventRowProps {
@@ -27,6 +28,17 @@ export const FlightEventRow: React.FC<FlightEventRowProps> = ({
   const event = item.event as FlightEvent;
   const departureTime = format(new Date(event.startDate), "h:mm a");
   const arrivalTime = format(new Date(event.endDate), "h:mm a");
+
+  // Build location link to departure airport
+  const locationLink = React.useMemo(
+    () => buildLocationLink(
+      event.departureAirportName,
+      undefined,
+      event.departureLatitude,
+      event.departureLongitude
+    ),
+    [event]
+  );
 
   // Calculate flight duration
   const duration = Math.round(
@@ -90,17 +102,17 @@ export const FlightEventRow: React.FC<FlightEventRowProps> = ({
         </div>
       </div>
 
-      {/* Navigation link */}
-      {item.navigationToDeparture && (
+      {/* Location link to departure airport */}
+      {locationLink && (
         <a
-          href={item.navigationToDeparture.directionsURL || undefined}
+          href={locationLink}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-2 text-xs font-bold text-primary hover:underline mt-4"
           onClick={(e) => e.stopPropagation()}
         >
           <MapPin className="w-4 h-4" />
-          {item.navigationToDeparture.destinationLabel || `Navigate to ${event.departureAirportName}`}
+          View airport on Google Maps
           <ExternalLink className="w-3 h-3" />
         </a>
       )}

@@ -52,12 +52,16 @@ export const HotelForm: React.FC<HotelFormProps> = ({
   );
   const [locationData, setLocationData] = useState<{
     address: string;
+    googlePlaceName?: string;
+    googlePlaceId?: string;
     latitude?: number;
     longitude?: number;
   }>(
     existingEvent
       ? {
           address: existingEvent.hotelAddress,
+          googlePlaceName: existingEvent.googlePlaceName,
+          googlePlaceId: existingEvent.googlePlaceId,
           latitude: existingEvent.hotelLatitude,
           longitude: existingEvent.hotelLongitude,
         }
@@ -68,11 +72,13 @@ export const HotelForm: React.FC<HotelFormProps> = ({
   const hasCoordinates = locationData.latitude !== undefined && locationData.longitude !== undefined;
 
   const handleLocationSelected = (result: LocationResult) => {
-    setLocationQuery(result.display_name);
+    setLocationQuery(result.name);
     setLocationData({
-      address: result.display_name,
-      latitude: parseFloat(result.lat),
-      longitude: parseFloat(result.lon),
+      address: result.formatted_address,
+      googlePlaceName: result.name, // Store official Google Places name
+      googlePlaceId: result.place_id, // Store place_id for direct map links
+      latitude: result.lat,
+      longitude: result.lng,
     });
   };
 
@@ -87,6 +93,8 @@ export const HotelForm: React.FC<HotelFormProps> = ({
     const eventData: Omit<HotelEvent, "id"> = {
       ...createDefaultHotelEvent(tripId, hotelName.trim(), startDateTime, endDateTime),
       hotelName: hotelName.trim(),
+      googlePlaceName: locationData.googlePlaceName,
+      googlePlaceId: locationData.googlePlaceId,
       checkInDate: startDateTime,
       checkOutDate: endDateTime,
       hotelAddress: locationData.address,

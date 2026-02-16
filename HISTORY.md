@@ -1,5 +1,53 @@
 # TravelPlanner Change History
 
+## 2026-02-16: Fix CORS issue with Google Places API
+- **Added Next.js API routes**: Created `/api/places/autocomplete` and `/api/places/details` to proxy Google Places requests server-side
+- **Fixed CORS error**: Google Places API cannot be called directly from browser due to CORS policy. Using Next.js API routes as proxy solves this.
+- **Updated googlePlacesService**: Changed to use internal API routes instead of calling Google directly
+- Files created: `src/app/api/places/autocomplete/route.ts`, `src/app/api/places/details/route.ts`
+- Files modified: `src/lib/services/googlePlacesService.ts`, `src/components/forms/location-search-section.tsx`
+
+## 2026-02-16: Store Google Places data and improve map/review links
+- **Store place_id and official place name**: All location-based events (hotel, restaurant, activity) now store `googlePlaceId` and `googlePlaceName` from Google Places API.
+- **Maps button opens Google Place page**: Updated `buildLocationLink()` to use place_id for direct links to Google Place pages (shows reviews, photos, info).
+- **Fallback URL generation**: If no place_id, uses name + address search to open the place page. Coordinates-only searches are last resort.
+- **Removed Reviews button**: The "Maps" button now opens the Google Place page which includes reviews, so the separate "Reviews" button was removed.
+- **RedNote uses official place name**: RedNote search now uses `googlePlaceName` (the official Google Places name) instead of user-entered name for better results.
+- **Updated all forms**: Hotel, restaurant, and activity forms now capture and store place_id and googlePlaceName when location is selected.
+- **Updated all event rows**: Removed "Reviews" button, kept "Maps" and "RedNote" buttons. Car rental only shows "Maps" button.
+- Files modified: `src/lib/models.ts`, `src/lib/services/mapsService.ts`, `src/components/forms/hotel-form.tsx`, `src/components/forms/restaurant-form.tsx`, `src/components/forms/activity-form.tsx`, `src/components/itinerary/event-rows/*.tsx`
+
+## 2026-02-16: Switch to Google Places API for location search
+- **Replaced Nominatim with Google Places API**: Location search now uses Google Places Autocomplete + Places Details APIs for better quality and exact place_id for review links.
+- **Single API key**: Uses existing `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` for Maps JavaScript API, Places API, and Geocoding API.
+- **Better integration**: Google Places provides exact place_id which enables direct links to Google Reviews pages (no more search ambiguity).
+- **Faster search**: No more 1 req/sec rate limiting (Nominatim policy). Google Places allows much higher throughput.
+- **New service file**: `googlePlacesService.ts` with functions for autocomplete, place details, and geocoding.
+- **Backward compatible interface**: `locationService.ts` re-exports from Google Places service, so all forms work without changes.
+- **Updated all forms**: Restaurant, hotel, activity, and car rental forms updated to use Google Places data structure (name, formatted_address, numeric lat/lng).
+- **Attribution change**: Updated location search UI from "© OpenStreetMap contributors" to "Powered by Google Places".
+- Files created: `src/lib/services/googlePlacesService.ts`
+- Files modified: `src/lib/services/locationService.ts`, `src/components/forms/*.tsx`, `src/components/forms/location-search-section.tsx`
+- Files deleted: `src/lib/services/locationService.old.ts` (Nominatim backup)
+
+## 2026-02-16: Add review integration (Google Reviews + RedNote)
+- **Initial implementation**: Added review search buttons to event rows (Maps, Reviews, RedNote).
+- **Note**: This feature was later improved - see "Store Google Places data and improve map/review links" entry above for current implementation.
+- **Created reviews service**: `reviewsService.ts` for generating review search URLs.
+- Files created: `src/lib/services/reviewsService.ts`
+
+## 2026-02-16: Simplify navigation links and add Google Maps trip view
+- **Simplified navigation**: Removed between-event navigation links from list view. Events now only show "View on Google Maps" link instead of "Navigate to..." directions.
+- **Location search links**: Created `buildLocationSearchLink()` in `navigationLinks.ts` and `buildLocationLink()` in `mapsService.ts` for opening locations in Google Maps (not directions).
+- **Updated all event rows**: Restaurant, hotel, activity, car rental, and flight event rows now use location search links that open the place on Google Maps for viewing.
+- **New Map view**: Added third view mode "Map" alongside List and Calendar. Shows all trip locations (hotels, restaurants, activities, flight airports) on a Google Map with color-coded markers.
+- **Google Maps integration**: New `TripMapView` component uses Google Maps JavaScript API. Requires `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` in .env.local.
+- **Removed unused components**: Deleted `day-map.tsx` and `leaflet-map.tsx` (per-day Leaflet map is now replaced by trip-wide Google Maps view).
+- **Store update**: Added "map" as valid itinerary view mode in `useUIStore`.
+- Files modified: `src/lib/services/mapsService.ts`, `src/lib/utils/navigationLinks.ts`, `src/lib/store.ts`, `src/components/itinerary/event-rows/*.tsx`, `src/components/itinerary/day-section.tsx`, `src/app/trips/[tripId]/_components/trip-detail-client.tsx`
+- Files created: `src/components/itinerary/trip-map-view.tsx`
+- Files deleted: `src/components/itinerary/day-map.tsx`, `src/components/itinerary/leaflet-map.tsx`
+
 ## 2026-02-16: Fix Unsplash image loading and add trip detail banner
 - **Fixed image persistence issue**: Images were disappearing when navigating back from trip detail to trip list. Root cause: hardcoded URL failed (404) setting `hasError = true`, then cached URL arrived but error state wasn't cleared. Fixed by resetting error state when new URL arrives.
 - **Improved Unsplash integration**: Reordered `getCityImageUrlAsync()` to skip hardcoded map check and always try cache → API → hardcoded fallback. This ensures fresh images from API even for hardcoded cities, replacing broken hardcoded URLs.

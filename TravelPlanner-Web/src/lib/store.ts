@@ -20,9 +20,9 @@ interface UIState {
   editingEvent: TripEvent | null;
   setEditingEvent: (event: TripEvent | null) => void;
 
-  // View mode (list vs calendar)
-  itineraryViewMode: "list" | "calendar";
-  setItineraryViewMode: (mode: "list" | "calendar") => void;
+  // View mode (list vs calendar vs map)
+  itineraryViewMode: "list" | "calendar" | "map";
+  setItineraryViewMode: (mode: "list" | "calendar" | "map") => void;
 
   // Confirmation dialogs
   deleteConfirmation: { type: "trip" | "event"; id: string } | null;

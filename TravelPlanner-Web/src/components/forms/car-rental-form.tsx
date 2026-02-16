@@ -86,22 +86,22 @@ export const CarRentalForm: React.FC<CarRentalFormProps> = ({
   const isEditing = existingEvent !== null;
 
   const handlePickupLocationSelected = (result: LocationResult) => {
-    const shortName = result.address.name || result.display_name.split(",")[0];
+    const shortName = result.name || result.formatted_address.split(",")[0];
     setPickupLocationQuery(shortName);
     setPickupLocationData({
       locationName: shortName,
-      latitude: parseFloat(result.lat),
-      longitude: parseFloat(result.lon),
+      latitude: result.lat,
+      longitude: result.lng,
     });
   };
 
   const handleReturnLocationSelected = (result: LocationResult) => {
-    const shortName = result.address.name || result.display_name.split(",")[0];
+    const shortName = result.name || result.formatted_address.split(",")[0];
     setReturnLocationQuery(shortName);
     setReturnLocationData({
       locationName: shortName,
-      latitude: parseFloat(result.lat),
-      longitude: parseFloat(result.lon),
+      latitude: result.lat,
+      longitude: result.lng,
     });
   };
 
