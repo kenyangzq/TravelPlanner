@@ -1,5 +1,10 @@
 # TravelPlanner Change History
 
+## 2026-02-16: Fix "Trip not found" on Azure SWA production for newly created trips
+- Root cause: In static export, Azure SWA rewrites all `/trips/*` to `/trips/_/index.html`. The server component passed `tripId: '_'` as a prop, so the client could never find the actual trip.
+- Fix: Client component now reads the real tripId from `window.location.pathname` instead of relying on the server-provided prop.
+- Files modified: `src/app/trips/[tripId]/_components/trip-detail-client.tsx`
+
 ## 2026-02-16: Fix dialog padding and add DateRangePicker calendar component
 - Fixed ConfirmDialog content padding — added `px-6 pt-6` to content wrapper so text doesn't touch edges
 - Created new `DateRangePicker` component (`src/components/ui/date-range-picker.tsx`) — calendar-based date range picker with month navigation, two-step selection, and range highlighting

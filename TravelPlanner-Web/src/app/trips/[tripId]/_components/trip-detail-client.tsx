@@ -6,6 +6,7 @@
 
 "use client";
 
+import { useState, useEffect } from "react";
 import { format, parseISO } from "date-fns";
 import { useEventsByDay, useTripHotels } from "@/lib/hooks/useTripDetail";
 import { useTrips } from "@/lib/hooks/useTrips";
@@ -24,7 +25,17 @@ interface TripDetailClientProps {
   tripId: string;
 }
 
-export function TripDetailClient({ tripId }: TripDetailClientProps) {
+export function TripDetailClient({ tripId: propTripId }: TripDetailClientProps) {
+  // In production static export, the server param is always '_' due to SWA rewrite.
+  // Read the real tripId from the URL path on the client.
+  const [tripId, setTripId] = useState(propTripId);
+  useEffect(() => {
+    const segments = window.location.pathname.split("/").filter(Boolean);
+    // URL: /trips/{tripId}/ → segments = ["trips", "{tripId}"]
+    if (segments.length >= 2 && segments[0] === "trips") {
+      setTripId(segments[1]);
+    }
+  }, []);
   const router = useRouter();
   const { trips, deleteTrip } = useTrips();
   const { isAddEventOpen, setIsAddEventOpen, deleteConfirmation, setDeleteConfirmation } =

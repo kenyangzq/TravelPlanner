@@ -162,7 +162,7 @@ TravelPlanner-Web/
 
 ### Key Architecture Decisions (Web)
 - **Conditional static export**: `next.config.js` uses `output: 'export'` only when `NODE_ENV === 'production'`. Dev mode uses Next.js hybrid rendering for full dynamic routes support. Production builds generate static HTML to avoid Azure SWA warm-up timeout on free tier.
-- **Server/client split for dynamic routes**: `trips/[tripId]/page.tsx` is a server component that exports `generateStaticParams()` with a placeholder `[{ tripId: '_' }]`. It renders `_components/trip-detail-client.tsx` which contains all client-side hooks and interactivity. SWA route rules in `staticwebapp.config.json` rewrite `/trips/*` to `/trips/_/index.html`, and client-side JS reads the real tripId from the URL.
+- **Server/client split for dynamic routes**: `trips/[tripId]/page.tsx` is a server component that exports `generateStaticParams()` with a placeholder `[{ tripId: '_' }]`. It renders `_components/trip-detail-client.tsx` which contains all client-side hooks and interactivity. SWA route rules in `staticwebapp.config.json` rewrite `/trips/*` to `/trips/_/index.html`. The client component reads the real tripId from `window.location.pathname` (not from the server-provided prop, which is always `_` in production) using a `useEffect` on mount.
 - **Discriminated unions**: Unlike iOS class inheritance, web uses TypeScript discriminated unions with `eventType` field to differentiate event types
 - **IndexedDB persistence**: All data stored locally in browser via Dexie.js, no server database required
 - **State separation**: Data state (Dexie) separate from UI state (Zustand) - mirrors iOS SwiftData + @Observable pattern
