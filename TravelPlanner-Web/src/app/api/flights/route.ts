@@ -7,6 +7,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
 const AERO_DATA_BOX_BASE_URL = "https://aerodatabox.p.rapidapi.com";
 
