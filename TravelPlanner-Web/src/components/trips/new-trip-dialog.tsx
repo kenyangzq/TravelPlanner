@@ -173,7 +173,7 @@ export function NewTripDialog({
           <DialogFooter className="gap-3 px-6 pt-2 pb-6">
             <Button
               type="button"
-              variant="outline"
+              variant="secondary"
               onClick={handleClose}
               disabled={isSubmitting}
               className="flex-1"
