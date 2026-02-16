@@ -40,7 +40,7 @@ body {
 /* Sticky header that accounts for safe area (PWA status bar) */
 .sticky-safe {
   position: sticky;
-  top: env(safe-area-inset-top, 0px);
+  top: 0;
   padding-top: env(safe-area-inset-top, 0px);
   z-index: 10;
 }

@@ -190,7 +190,7 @@ export function TripDetailClient({ tripId: propTripId }: TripDetailClientProps) 
       <TripImageBanner citiesRaw={trip.citiesRaw} tripName={trip.name} />
 
       {/* View mode toggle */}
-      <div className="sticky top-[52px] sm:top-[68px] z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-b border-primary/10 px-3 sm:px-6 py-2 -mt-px">
+      <div className="sticky top-[calc(env(safe-area-inset-top,0px)+52px)] sm:top-[calc(env(safe-area-inset-top,0px)+68px)] z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-b border-primary/10 px-3 sm:px-6 py-2 -mt-px">
         <div className="max-w-3xl mx-auto flex items-center gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg w-fit">
           <button
             onClick={() => useUIStore.getState().setItineraryViewMode("list")}

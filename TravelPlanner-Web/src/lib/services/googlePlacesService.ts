@@ -123,8 +123,7 @@ export async function searchPlacesAutocomplete(
   cities: string[] = []
 ): Promise<GooglePlacePrediction[]> {
   if (!API_KEY) {
-    console.error("Google Maps API key not configured");
-    return [];
+    throw new Error("Google Maps API key not configured. Set NEXT_PUBLIC_GOOGLE_MAPS_API_KEY in environment.");
   }
 
   if (!query || query.trim().length === 0) {
