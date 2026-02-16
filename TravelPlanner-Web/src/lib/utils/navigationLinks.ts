@@ -338,26 +338,22 @@ export function buildLocationSearchLink(
   let address: string | undefined;
   let lat: number | undefined;
   let lng: number | undefined;
-  let placeId: string | undefined;
 
   if (isHotelEvent(event)) {
-    name = event.hotelName;
+    name = event.googlePlaceName || event.hotelName;
     address = event.hotelAddress;
     lat = event.hotelLatitude;
     lng = event.hotelLongitude;
-    placeId = event.googlePlaceId;
   } else if (isRestaurantEvent(event)) {
-    name = event.restaurantName;
+    name = event.googlePlaceName || event.restaurantName;
     address = event.restaurantAddress;
     lat = event.restaurantLatitude;
     lng = event.restaurantLongitude;
-    placeId = event.googlePlaceId;
   } else if (isActivityEvent(event)) {
-    name = event.activityLocationName;
+    name = event.googlePlaceName || event.activityLocationName;
     address = undefined;
     lat = event.activityLatitude;
     lng = event.activityLongitude;
-    placeId = event.googlePlaceId;
   } else if (isFlightEvent(event)) {
     // For flights, link to arrival airport
     name = event.arrivalAirportName || event.arrivalAirportIATA;
@@ -369,7 +365,7 @@ export function buildLocationSearchLink(
     lng = event.pickupLongitude;
   }
 
-  const url = buildLocationLink(name, address, lat, lng, placeId);
+  const url = buildLocationLink(name, address, lat, lng);
   if (!url) return null;
 
   return {

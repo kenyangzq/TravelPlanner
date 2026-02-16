@@ -102,7 +102,7 @@ export function TripDetailClient({ tripId: propTripId }: TripDetailClientProps) 
   const trip = trips.find((t) => t.id === tripId);
   const eventsByDay = useEventsByDay(tripId);
   const hotels = useTripHotels(tripId);
-  const { events } = useEvents(tripId);
+  const { events, deleteEvent } = useEvents(tripId);
 
   const handleExportCalendar = () => {
     if (trip) {
@@ -137,7 +137,7 @@ export function TripDetailClient({ tripId: propTripId }: TripDetailClientProps) 
   return (
     <div className="min-h-screen bg-[#f6f7f8] dark:bg-[#111921] pb-20">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-primary/10 px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2">
+      <header className="sticky-safe z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-primary/10 px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 sm:gap-4 min-w-0">
           <Button
             size="sm"
@@ -288,7 +288,9 @@ export function TripDetailClient({ tripId: propTripId }: TripDetailClientProps) 
         confirmLabel={deleteConfirmation?.type === "trip" ? "Delete Trip" : "Delete Event"}
         onConfirm={
           deleteConfirmation?.type === "trip" ? handleDeleteTrip : async () => {
-            // Event deletion handled in AddEventDialog
+            if (deleteConfirmation?.id) {
+              await deleteEvent(deleteConfirmation.id);
+            }
             setDeleteConfirmation(null);
           }
         }

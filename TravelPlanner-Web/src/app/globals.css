@@ -37,6 +37,14 @@ body {
   padding-right: env(safe-area-inset-right);
 }
 
+/* Sticky header that accounts for safe area (PWA status bar) */
+.sticky-safe {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  padding-top: env(safe-area-inset-top, 0px);
+  z-index: 10;
+}
+
 /* Touch optimization */
 * {
   touch-action: manipulation;

@@ -1,5 +1,19 @@
 # TravelPlanner Change History
 
+## 2026-02-16: Fix Google Places in production (static export)
+- **Root cause**: `output: 'export'` in Next.js means no API routes exist in production. The `/api/places/*` proxy routes that handled CORS were unavailable in the static build.
+- **Fix**: Rewrote `googlePlacesService.ts` to use the **Google Maps JavaScript API** (Places library) instead of REST API proxied through API routes. The JS API is designed for client-side use and has no CORS issues.
+- **Added `@types/google.maps`** dev dependency for TypeScript support.
+- **Updated `trip-map-view.tsx`**: Added `libraries=places` to the Google Maps script URL to ensure Places library is always loaded (prevents conflict with googlePlacesService).
+- **Important**: The Google Cloud project must have both **Maps JavaScript API** and **Places API** enabled.
+- Files modified: `src/lib/services/googlePlacesService.ts`, `src/components/itinerary/trip-map-view.tsx`, `package.json`
+
+## 2026-02-16: Fix Maps link, delete event bug, and mobile header padding
+- **Fixed Maps link**: Removed broken `place_id` URL format (`/maps/place/?api=1&place_id=...`). Now uses `googlePlaceName` (official Google Places name) for search-based URLs that reliably open the correct place page, matching the RedNote link approach.
+- **Fixed event deletion bug**: The delete confirmation dialog's `onConfirm` handler was not actually deleting the event — it only closed the dialog. Now properly calls `deleteEvent()` from the `useEvents` hook.
+- **Fixed mobile PWA header overlap**: Sticky headers were hidden behind the phone status bar in PWA mode. Added `sticky-safe` CSS class that uses `env(safe-area-inset-top)` for both `top` positioning and `padding-top`.
+- Files modified: `src/lib/utils/navigationLinks.ts`, `src/lib/services/mapsService.ts`, `src/app/trips/[tripId]/_components/trip-detail-client.tsx`, `src/app/page.tsx`, `src/app/globals.css`
+
 ## 2026-02-16: Fix CORS issue with Google Places API
 - **Added Next.js API routes**: Created `/api/places/autocomplete` and `/api/places/details` to proxy Google Places requests server-side
 - **Fixed CORS error**: Google Places API cannot be called directly from browser due to CORS policy. Using Next.js API routes as proxy solves this.

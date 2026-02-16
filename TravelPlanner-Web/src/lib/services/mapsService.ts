@@ -114,20 +114,14 @@ export function locationURL(
 
 /**
  * Build Google Maps search or pin URL based on available data
- * Prioritizes place_id (direct to place page), then name+address search, then coordinates
+ * Prioritizes name+address search (reliable), then name only, then coordinates
  */
 export function buildLocationLink(
   name?: string,
   address?: string,
   lat?: number,
-  lng?: number,
-  place_id?: string
+  lng?: number
 ): string | null {
-  // Use place_id if available (direct link to Google Place page with reviews)
-  if (place_id) {
-    return `https://www.google.com/maps/place/?api=1&place_id=${place_id}`;
-  }
-
   // Use name + address search (opens place page with reviews)
   if (name && address) {
     const query = encodeURIComponent(`${name} ${address}`);

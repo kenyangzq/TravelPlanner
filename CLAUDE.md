@@ -13,7 +13,7 @@ TravelPlanner is a cross-platform travel planning app with both iOS and web (PWA
 Built with SwiftUI targeting iOS 26. Uses SwiftData with class inheritance, Apple Maps navigation, and MKLocalSearch for location finding.
 
 ### Web Version (Progressive Web App)
-Built with Next.js 14, React, TypeScript, and Tailwind CSS. Can be installed on iPhone (Add to Home Screen) and works offline. Uses IndexedDB via Dexie.js for data persistence, Google Maps for navigation, and Nominatim (OpenStreetMap) for location search. See [Web App Implementation](#web-app-implementation) below for details.
+Built with Next.js 14, React, TypeScript, and Tailwind CSS. Can be installed on iPhone (Add to Home Screen) and works offline. Uses IndexedDB via Dexie.js for data persistence, Google Maps for navigation, and Google Places JavaScript API for location search. See [Web App Implementation](#web-app-implementation) below for details.
 
 ## Tech Stack
 - **Language**: Swift
@@ -113,9 +113,9 @@ TravelPlanner/
 ### Tech Stack
 - **Framework**: Next.js 14 (App Router) + React + TypeScript + Tailwind CSS
 - **Data**: IndexedDB via Dexie.js (browser-only, no server DB)
-- **Flight API**: AeroDataBox via RapidAPI (proxied through Next.js API routes)
+- **Flight API**: AeroDataBox via RapidAPI (called directly from client)
 - **Maps**: Google Maps URLs (`google.com/maps/dir/?api=1&destination=...`)
-- **Location Search**: Nominatim API (OpenStreetMap, free, no API key required)
+- **Location Search**: Google Places JavaScript API (loaded via Maps JS SDK, no API route proxy needed — works with static export)
 - **PWA**: `@ducanh2912/next-pwa` for service worker + manifest
 - **State**: Zustand for UI state (modals, editing); Dexie `useLiveQuery` for data
 - **Icons**: lucide-react
@@ -167,8 +167,10 @@ TravelPlanner-Web/
 - **IndexedDB persistence**: All data stored locally in browser via Dexie.js, no server database required
 - **State separation**: Data state (Dexie) separate from UI state (Zustand) - mirrors iOS SwiftData + @Observable pattern
 - **Client-side flight API**: Flight search calls AeroDataBox directly from the browser (no API route proxy). API key exposed via `NEXT_PUBLIC_RAPIDAPI_KEY` — acceptable for personal app.
-- **City-biased location search**: Nominatim API with viewbox bounding box around trip cities for better results (~50km radius)
-- **Rate limiting**: Location search limited to 1 request per second (Nominatim policy)
+- **City-biased location search**: Google Places Autocomplete with location bias toward trip cities (~50km radius)
+- **Google Maps JS API loading**: `googlePlacesService.ts` dynamically loads the Maps JS SDK with Places library. Handles deduplication with other components (e.g., trip-map-view) that may also load the SDK. Uses `AutocompleteService` and `PlacesService` for all location search — no server-side API routes needed (compatible with `output: 'export'`).
+- **Maps link**: Uses `googlePlaceName` (official Google Places name) with search-based URLs for reliable place page linking. Does not use `place_id` URLs (unreliable).
+- **Safe area handling**: Sticky headers use `sticky-safe` CSS class with `env(safe-area-inset-top)` for PWA status bar compatibility.
 - **PWA installation**: Can be installed on iPhone via "Add to Home Screen" in Safari, runs in standalone mode
 - **Safe area handling**: CSS `env(safe-area-inset-*)` for iPhone notch/home indicator support
 - **Trip card images**: City-based Unsplash photos with dynamic fetching via Unsplash API and IndexedDB caching. Hardcoded map provides instant results for 60+ popular destinations (no network needed). Unknown cities fetch from Unsplash API (if `NEXT_PUBLIC_UNSPLASH_ACCESS_KEY` is set) and are cached in IndexedDB for instant subsequent loads. Falls back to 6 default travel-themed images. Uses first city from trip's cities list.
@@ -212,7 +214,7 @@ See `TravelPlanner-Web/DEPLOYMENT.md` for comprehensive Azure deployment guide, 
 |-----|-----|
 | SwiftData with class inheritance | Dexie.js (IndexedDB) with discriminated unions |
 | `@Observable` ViewModels | React hooks + Zustand for UI state |
-| MKLocalSearch (MapKit) | Nominatim (OpenStreetMap) - free, no API key |
+| MKLocalSearch (MapKit) | Google Places JS API (via Maps SDK) |
 | Apple Maps URLs (`maps.apple.com`) | Google Maps URLs (`google.com/maps/dir/`) |
 | `MinuteIntervalDatePicker` (UIKit) | Native `<input type="time" step="900">` + custom DurationPicker |
 | SF Symbols | lucide-react icons |

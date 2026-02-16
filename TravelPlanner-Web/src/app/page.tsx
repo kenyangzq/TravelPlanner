@@ -36,7 +36,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#f6f7f8] dark:bg-[#111921] pb-20">
       {/* Header */}
-      <header className="h-16 sm:h-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-primary/10 sticky top-0 z-10 px-4 sm:px-8 flex items-center justify-between">
+      <header className="h-16 sm:h-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-primary/10 sticky-safe px-4 sm:px-8 flex items-center justify-between">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">
             My Trips
