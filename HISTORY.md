@@ -1,5 +1,13 @@
 # TravelPlanner Change History
 
+## 2026-02-15: Optimize staticwebapp.config.json for Azure SWA deployment
+- Updated `navigationFallback.rewrite` to point directly to `/trips/_/index.html` for accurate dynamic route handling
+- Added `/images/*` to exclusion list and updated manifest filename to `manifest.webmanifest`
+- Added route redirect from `/index.html` to `/` for cleaner URLs
+- Added `.webmanifest` MIME type declaration for proper PWA manifest serving
+- This ensures when users refresh `/trips/xxx`, the browser loads the correct HTML/JS and client-side code reads tripId from URL
+- Files modified: `staticwebapp.config.json`
+
 ## 2026-02-15: Hide map and reminder sidebar from list view
 - Map and reminder features remain implemented but are now hidden from UI per user request
 - Reverted day-section.tsx to single-column timeline layout
