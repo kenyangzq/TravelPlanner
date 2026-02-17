@@ -1,5 +1,17 @@
 # TravelPlanner Change History
 
+## 2026-02-16: Improve map view filtering and marker styling
+- **Date filter**: Added date filter bar at top of map view with clickable buttons for each trip date. "All dates" button shows all locations. Filter shows count of locations for selected date.
+- **Airport city filtering**: Arrival airports are now filtered to only show those whose name contains one of the trip's cities. Return airports (outside target cities) are excluded from the map.
+- **Smaller marker dots**: Reduced map marker scale from 10 to 6 for better visibility and less visual clutter.
+- Files modified: `src/components/itinerary/trip-map-view.tsx`
+
+## 2026-02-16: Fix Google Places session token usage
+- **Problem**: Session tokens were being created as UUID strings but not passed to Google Places API calls. This meant each autocomplete and details call was billed separately instead of as a bundled session.
+- **Fix**: Updated `googlePlacesService.ts` to use Google Maps JavaScript API's `AutocompleteSessionToken` class instead of custom UUID tokens.
+- **Session tokens now properly passed**: Both `AutocompleteService.getPlacePredictions()` and `PlacesService.getDetails()` now receive the session token parameter for correct billing per Google's requirements.
+- Files modified: `src/lib/services/googlePlacesService.ts`
+
 ## 2026-02-16: Fix RedNote links not opening on mobile
 - **Problem**: RedNote web URL (`xiaohongshu.com/search_result?keyword=...`) doesn't work on mobile — redirects to app download pages instead of showing search results
 - **Fix**: Changed to `xhsdiscover://` deep link scheme (`xhsdiscover://search/result?keyword=...`) which opens the RedNote app directly on mobile

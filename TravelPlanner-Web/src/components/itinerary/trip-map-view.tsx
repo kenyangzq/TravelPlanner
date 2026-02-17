@@ -8,9 +8,12 @@
 "use client";
 
 import * as React from "react";
-import { MapPin, Loader2 } from "lucide-react";
+import { MapPin, Loader2, Calendar } from "lucide-react";
 import type { Trip, TripEvent, HotelEvent } from "@/lib/models";
+import { parseCities } from "@/lib/models";
 import { isHotelEvent, isRestaurantEvent, isActivityEvent, isFlightEvent } from "@/lib/db";
+import { format } from "date-fns";
+import { Button } from "@/components/ui/button";
 
 interface TripMapViewProps {
   trip: Trip;
@@ -26,6 +29,13 @@ interface MapMarker {
   lat: number;
   lng: number;
   color: string;
+  date?: string; // ISO date string for filtering
+}
+
+// Helper to check if airport name contains a city name
+function airportIsInCity(airportName: string, cities: string[]): boolean {
+  const airportNameLower = airportName.toLowerCase();
+  return cities.some(city => airportNameLower.includes(city.toLowerCase()));
 }
 
 export const TripMapView: React.FC<TripMapViewProps> = ({ trip, events, hotels }) => {
@@ -35,12 +45,29 @@ export const TripMapView: React.FC<TripMapViewProps> = ({ trip, events, hotels }
   const [isLoading, setIsLoading] = React.useState(true);
   const [loadError, setLoadError] = React.useState<string | null>(null);
   const [isScriptLoaded, setIsScriptLoaded] = React.useState(false);
+  const [selectedDate, setSelectedDate] = React.useState<string | null>(null);
+
+  // Generate array of trip dates for filter
+  const tripDates = React.useMemo(() => {
+    const dates: string[] = [];
+    const start = new Date(trip.startDate);
+    const end = new Date(trip.endDate);
+    const current = new Date(start);
+
+    while (current <= end) {
+      dates.push(current.toISOString().split('T')[0]);
+      current.setDate(current.getDate() + 1);
+    }
+
+    return dates;
+  }, [trip.startDate, trip.endDate]);
 
   // Extract all locations from events and hotels
-  const locations = React.useMemo((): MapMarker[] => {
+  const allLocations = React.useMemo((): MapMarker[] => {
     const markers: MapMarker[] = [];
+    const tripCities = parseCities(trip.citiesRaw);
 
-    // Add hotels
+    // Add hotels (show on all dates they cover)
     hotels.forEach((hotel) => {
       if (hotel.hotelLatitude && hotel.hotelLongitude) {
         markers.push({
@@ -50,6 +77,7 @@ export const TripMapView: React.FC<TripMapViewProps> = ({ trip, events, hotels }
           lat: hotel.hotelLatitude,
           lng: hotel.hotelLongitude,
           color: "#9333ea", // purple
+          date: hotel.checkInDate,
         });
       }
     });
@@ -65,6 +93,7 @@ export const TripMapView: React.FC<TripMapViewProps> = ({ trip, events, hotels }
             lat: event.restaurantLatitude,
             lng: event.restaurantLongitude,
             color: "#ef4444", // red
+            date: event.reservationTime,
           });
         }
       } else if (isActivityEvent(event)) {
@@ -76,25 +105,44 @@ export const TripMapView: React.FC<TripMapViewProps> = ({ trip, events, hotels }
             lat: event.activityLatitude,
             lng: event.activityLongitude,
             color: "#ef4444", // red (same as restaurant)
+            date: event.startDate,
           });
         }
       } else if (isFlightEvent(event)) {
-        // Add arrival airport
+        // Only add arrival airport if it's in the target cities
+        const arrivalName = event.arrivalAirportName || event.arrivalAirportIATA || "Airport";
         if (event.arrivalLatitude && event.arrivalLongitude) {
-          markers.push({
-            id: `${event.id}-arrival`,
-            type: "flight",
-            name: event.arrivalAirportName || event.arrivalAirportIATA || "Airport",
-            lat: event.arrivalLatitude,
-            lng: event.arrivalLongitude,
-            color: "#3b82f6", // blue
-          });
+          // Check if airport is in one of the trip cities
+          if (airportIsInCity(arrivalName, tripCities)) {
+            markers.push({
+              id: `${event.id}-arrival`,
+              type: "flight",
+              name: arrivalName,
+              lat: event.arrivalLatitude,
+              lng: event.arrivalLongitude,
+              color: "#3b82f6", // blue
+              date: event.startDate,
+            });
+          }
         }
       }
     });
 
     return markers;
-  }, [events, hotels]);
+  }, [events, hotels, trip.citiesRaw]);
+
+  // Filter locations by selected date
+  const locations = React.useMemo((): MapMarker[] => {
+    if (!selectedDate) {
+      return allLocations;
+    }
+
+    return allLocations.filter(marker => {
+      if (!marker.date) return false;
+      const markerDate = new Date(marker.date).toISOString().split('T')[0];
+      return markerDate === selectedDate;
+    });
+  }, [allLocations, selectedDate]);
 
   // Load Google Maps JavaScript API
   React.useEffect(() => {
@@ -166,7 +214,7 @@ export const TripMapView: React.FC<TripMapViewProps> = ({ trip, events, hotels }
     // Create custom marker icons
     const createMarkerIcon = (color: string) => ({
       path: gm.SymbolPath.CIRCLE,
-      scale: 10,
+      scale: 6, // Reduced from 10 for smaller dots
       fillColor: color,
       fillOpacity: 1,
       strokeColor: "#ffffff",
@@ -261,6 +309,39 @@ export const TripMapView: React.FC<TripMapViewProps> = ({ trip, events, hotels }
   // Show map
   return (
     <div className="bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm">
+      {/* Date filter controls */}
+      <div className="border-b border-slate-200 dark:border-slate-700 p-3 bg-slate-50 dark:bg-slate-800">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Calendar className="w-4 h-4 text-slate-500" />
+          <span className="text-sm text-slate-600 dark:text-slate-300 mr-2">Filter by date:</span>
+          <Button
+            variant={!selectedDate ? "primary" : "secondary"}
+            size="sm"
+            onClick={() => setSelectedDate(null)}
+          >
+            All dates
+          </Button>
+          {tripDates.map(date => {
+            const dateObj = new Date(date);
+            const formattedDate = format(dateObj, "MMM d");
+            return (
+              <Button
+                key={date}
+                variant={selectedDate === date ? "primary" : "secondary"}
+                size="sm"
+                onClick={() => setSelectedDate(date)}
+              >
+                {formattedDate}
+              </Button>
+            );
+          })}
+        </div>
+        {selectedDate && (
+          <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+            Showing {locations.length} location{locations.length !== 1 ? 's' : ''} for {format(new Date(selectedDate), "MMM d, yyyy")}
+          </div>
+        )}
+      </div>
       <div ref={mapRef} className="w-full h-[500px]" />
     </div>
   );

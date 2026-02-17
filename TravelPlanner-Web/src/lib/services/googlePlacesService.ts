@@ -108,9 +108,13 @@ function loadGoogleMapsApi(): Promise<void> {
 
 /**
  * Generate a session token for Places Autocomplete
+ * Uses Google Maps JavaScript API's AutocompleteSessionToken class
  */
-export function createSessionToken(): string {
-  return "sess-" + Date.now() + "-" + Math.random().toString(36).substring(2, 15);
+export function createSessionToken(): google.maps.places.AutocompleteSessionToken {
+  if (!window.google?.maps?.places) {
+    throw new Error("Google Maps API not loaded");
+  }
+  return new google.maps.places.AutocompleteSessionToken();
 }
 
 /**
@@ -119,7 +123,7 @@ export function createSessionToken(): string {
  */
 export async function searchPlacesAutocomplete(
   query: string,
-  _sessionToken: string,
+  sessionToken: google.maps.places.AutocompleteSessionToken,
   cities: string[] = []
 ): Promise<GooglePlacePrediction[]> {
   if (!API_KEY) {
@@ -138,6 +142,7 @@ export async function searchPlacesAutocomplete(
     const request: google.maps.places.AutocompletionRequest = {
       input: query,
       types: ["establishment"],
+      sessionToken,
     };
 
     // Add location bias if cities provided
@@ -185,7 +190,7 @@ export async function searchPlacesAutocomplete(
  */
 export async function getPlaceDetails(
   placeId: string,
-  _sessionToken: string
+  sessionToken: google.maps.places.AutocompleteSessionToken
 ): Promise<GoogleLocationResult | null> {
   if (!API_KEY) {
     console.error("Google Maps API key not configured");
@@ -218,6 +223,7 @@ export async function getPlaceDetails(
         "rating",
         "types",
       ],
+      sessionToken,
     };
 
     return new Promise((resolve) => {
@@ -270,6 +276,9 @@ export async function searchPlaces(
   query: string,
   cities: string[] = []
 ): Promise<GoogleLocationResult[]> {
+  // Ensure API is loaded before creating session token
+  await loadGoogleMapsApi();
+
   const sessionToken = createSessionToken();
   const predictions = await searchPlacesAutocomplete(query, sessionToken, cities);
 
