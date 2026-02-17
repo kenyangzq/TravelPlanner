@@ -1,5 +1,12 @@
 # TravelPlanner Change History
 
+## 2026-02-16: Fix map view empty state display
+- **Bug**: When filtering by a date with no locations, the entire map and filter controls disappeared
+- **Fix**: Map and filter controls now remain visible even when no locations exist for the selected date
+- **City centering**: When there are no markers, the map centers on the first trip city (geocoded via Google Maps Geocoding API)
+- **Overlay message**: Semi-transparent overlay shows "No locations for this date" message while keeping the map visible
+- Files modified: `src/components/itinerary/trip-map-view.tsx`
+
 ## 2026-02-16: Improve map view filtering and marker styling
 - **Date filter**: Added date filter bar at top of map view with clickable buttons for each trip date. "All dates" button shows all locations. Filter shows count of locations for selected date.
 - **Airport city filtering**: Arrival airports are now filtered to only show those whose name contains one of the trip's cities. Return airports (outside target cities) are excluded from the map.

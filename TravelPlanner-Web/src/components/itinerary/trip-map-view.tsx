@@ -189,16 +189,43 @@ export const TripMapView: React.FC<TripMapViewProps> = ({ trip, events, hotels }
     };
   }, [isScriptLoaded]);
 
+  // Get default map center from first trip city
+  const [defaultCenter, setDefaultCenter] = React.useState<{ lat: number; lng: number } | null>(null);
+
+  React.useEffect(() => {
+    if (!isScriptLoaded) return;
+    const tripCities = parseCities(trip.citiesRaw);
+    if (tripCities.length === 0) return;
+
+    const geocoder = new (window as any).google.maps.Geocoder();
+    geocoder.geocode({ address: tripCities[0] }, (results: any, status: string) => {
+      if (status === "OK" && results && results.length > 0) {
+        const location = results[0].geometry.location;
+        setDefaultCenter({ lat: location.lat(), lng: location.lng() });
+      }
+    });
+  }, [isScriptLoaded, trip.citiesRaw]);
+
   // Initialize map and add markers when script is loaded
   React.useEffect(() => {
-    if (!isScriptLoaded || !mapRef.current || locations.length === 0) return;
+    if (!isScriptLoaded || !mapRef.current) return;
 
     const gm = (window as any).google.maps;
 
+    // Determine map center
+    let center: { lat: number; lng: number };
+    if (locations.length > 0) {
+      center = { lat: locations[0].lat, lng: locations[0].lng };
+    } else if (defaultCenter) {
+      center = defaultCenter;
+    } else {
+      center = { lat: 0, lng: 0 };
+    }
+
     // Initialize map
     const map = new gm.Map(mapRef.current, {
-      center: { lat: locations[0].lat, lng: locations[0].lng },
-      zoom: 12,
+      center,
+      zoom: locations.length > 0 ? 12 : 10,
       mapTypeId: gm.MapTypeId.ROADMAP,
       styles: [
         {
@@ -268,7 +295,7 @@ export const TripMapView: React.FC<TripMapViewProps> = ({ trip, events, hotels }
       // Cleanup markers
       markers.forEach((marker) => marker.setMap(null));
     };
-  }, [isScriptLoaded, locations]);
+  }, [isScriptLoaded, locations, defaultCenter]);
 
   // Show loading state
   if (isLoading) {
@@ -293,20 +320,7 @@ export const TripMapView: React.FC<TripMapViewProps> = ({ trip, events, hotels }
     );
   }
 
-  // Show empty state
-  if (locations.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-[500px] bg-slate-100 dark:bg-slate-800 rounded-xl">
-        <MapPin className="w-8 h-8 text-slate-400 mb-3" />
-        <p className="text-sm text-slate-500">No locations to display</p>
-        <p className="text-xs text-slate-400 mt-1">
-          Add events with locations to see them on the map
-        </p>
-      </div>
-    );
-  }
-
-  // Show map
+  // Show map with filters (even when no locations)
   return (
     <div className="bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm">
       {/* Date filter controls */}
@@ -342,7 +356,19 @@ export const TripMapView: React.FC<TripMapViewProps> = ({ trip, events, hotels }
           </div>
         )}
       </div>
-      <div ref={mapRef} className="w-full h-[500px]" />
+      <div className="relative">
+        <div ref={mapRef} className="w-full h-[500px]" />
+        {/* Empty state overlay when no locations for selected date */}
+        {isScriptLoaded && locations.length === 0 && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/80 dark:bg-slate-900/80 pointer-events-none">
+            <MapPin className="w-8 h-8 text-slate-400 mb-3" />
+            <p className="text-sm text-slate-500">No locations for this date</p>
+            <p className="text-xs text-slate-400 mt-1">
+              Select a different date or add events with locations
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
