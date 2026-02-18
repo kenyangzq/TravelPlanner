@@ -1,5 +1,11 @@
 # TravelPlanner Change History
 
+## 2026-02-17: Add hotel map links, fix map view dates, fix timeline overlap
+- **Hotel map links**: Day hotel headers ("You're staying here") now show a Maps link to the hotel, consistent with hotel event rows
+- **Map view date bug**: Fixed timezone issue where `new Date("YYYY-MM-DD")` parsed as UTC, causing a date before trip start to appear in filter buttons. Replaced with `parseISO` from date-fns throughout `trip-map-view.tsx`
+- **Timeline timestamp overlap**: Increased left padding and timestamp width in day-section so time labels no longer overlap the vertical timeline line
+- Files modified: `src/components/itinerary/day-section.tsx`, `src/components/itinerary/trip-map-view.tsx`
+
 ## 2026-02-17: Fix weather condition icons not displaying
 - **Bug**: Weather badges in day headers showed temperature but no weather condition icon (sunny/rainy/cloudy etc.)
 - **Root cause**: Icon URL was constructed with incorrect suffix `1x.png` — Google Weather API expects `.png` appended directly to `iconBaseUri`

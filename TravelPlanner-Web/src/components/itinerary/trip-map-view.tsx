@@ -12,7 +12,7 @@ import { MapPin, Loader2, Calendar } from "lucide-react";
 import type { Trip, TripEvent, HotelEvent } from "@/lib/models";
 import { parseCities } from "@/lib/models";
 import { isHotelEvent, isRestaurantEvent, isActivityEvent, isFlightEvent } from "@/lib/db";
-import { format } from "date-fns";
+import { format, parseISO, addDays } from "date-fns";
 import { Button } from "@/components/ui/button";
 
 interface TripMapViewProps {
@@ -50,13 +50,12 @@ export const TripMapView: React.FC<TripMapViewProps> = ({ trip, events, hotels }
   // Generate array of trip dates for filter
   const tripDates = React.useMemo(() => {
     const dates: string[] = [];
-    const start = new Date(trip.startDate);
-    const end = new Date(trip.endDate);
-    const current = new Date(start);
+    let current = parseISO(trip.startDate);
+    const end = parseISO(trip.endDate);
 
     while (current <= end) {
-      dates.push(current.toISOString().split('T')[0]);
-      current.setDate(current.getDate() + 1);
+      dates.push(format(current, "yyyy-MM-dd"));
+      current = addDays(current, 1);
     }
 
     return dates;
@@ -139,7 +138,7 @@ export const TripMapView: React.FC<TripMapViewProps> = ({ trip, events, hotels }
 
     return allLocations.filter(marker => {
       if (!marker.date) return false;
-      const markerDate = new Date(marker.date).toISOString().split('T')[0];
+      const markerDate = marker.date.substring(0, 10);
       return markerDate === selectedDate;
     });
   }, [allLocations, selectedDate]);
@@ -336,7 +335,7 @@ export const TripMapView: React.FC<TripMapViewProps> = ({ trip, events, hotels }
             All dates
           </Button>
           {tripDates.map(date => {
-            const dateObj = new Date(date);
+            const dateObj = parseISO(date);
             const formattedDate = format(dateObj, "MMM d");
             return (
               <Button
@@ -352,7 +351,7 @@ export const TripMapView: React.FC<TripMapViewProps> = ({ trip, events, hotels }
         </div>
         {selectedDate && (
           <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-            Showing {locations.length} location{locations.length !== 1 ? 's' : ''} for {format(new Date(selectedDate), "MMM d, yyyy")}
+            Showing {locations.length} location{locations.length !== 1 ? 's' : ''} for {format(parseISO(selectedDate), "MMM d, yyyy")}
           </div>
         )}
       </div>

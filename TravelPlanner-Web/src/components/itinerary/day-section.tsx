@@ -9,7 +9,8 @@
 
 import * as React from "react";
 import { format, parseISO } from "date-fns";
-import { Building2, StickyNote, Pencil } from "lucide-react";
+import { Building2, StickyNote, Pencil, MapPin, ExternalLink } from "lucide-react";
+import { buildLocationSearchLink } from "@/lib/utils/navigationLinks";
 import { FlightEventRow } from "./event-rows/flight-event-row";
 import { HotelEventRow } from "./event-rows/hotel-event-row";
 import { RestaurantEventRow } from "./event-rows/restaurant-event-row";
@@ -90,14 +91,16 @@ export const DaySection: React.FC<DaySectionProps> = ({
       </div>
 
       {/* Timeline layout - Map and reminder hidden for now */}
-      <div className="relative pl-12 sm:pl-16 pr-2 sm:pr-4">
+      <div className="relative pl-16 sm:pl-20 pr-2 sm:pr-4">
         {/* Timeline line */}
-        <div className="absolute left-[2.5rem] sm:left-[3.5rem] top-0 bottom-0 w-0.5 bg-gradient-to-b from-transparent via-primary to-transparent opacity-30" />
+        <div className="absolute left-[3.25rem] sm:left-[4.25rem] top-0 bottom-0 w-0.5 bg-gradient-to-b from-transparent via-primary to-transparent opacity-30" />
 
         {/* Day hotel header (if applicable) */}
-        {dayHotel && (
+        {dayHotel && (() => {
+            const hotelLocationLink = buildLocationSearchLink(dayHotel.hotel as any);
+            return (
             <div className="relative pl-6 sm:pl-8 pb-6">
-              <span className="absolute -left-[2.5rem] sm:-left-[3.5rem] top-4 w-[2rem] sm:w-[2.75rem] text-right pr-1 sm:pr-3 text-[9px] sm:text-[10px] font-semibold text-slate-400 dark:text-slate-500 leading-tight">
+              <span className="absolute -left-[3.5rem] sm:-left-[4.5rem] top-4 w-[3rem] sm:w-[3.75rem] text-right pr-2 sm:pr-3 text-[9px] sm:text-[10px] font-semibold text-slate-400 dark:text-slate-500 leading-tight">
                 {format(parseISO(dayHotel.hotel.checkInDate), "h:mma")}
               </span>
               <div className="absolute -left-[5px] top-5 w-3 h-3 rounded-full bg-primary ring-4 ring-white dark:ring-slate-950" />
@@ -106,14 +109,29 @@ export const DaySection: React.FC<DaySectionProps> = ({
                   <div className="w-11 h-11 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <Building2 className="w-5 h-5 text-primary" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <h3 className="font-bold text-base text-slate-900 dark:text-white">{dayHotel.hotel.hotelName}</h3>
-                    <p className="text-sm text-slate-500">You're staying here</p>
+                    <p className="text-sm text-slate-500">You&apos;re staying here</p>
                   </div>
                 </div>
+                {hotelLocationLink && (
+                  <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700">
+                    <a
+                      href={hotelLocationLink.locationURL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline"
+                    >
+                      <MapPin className="w-3.5 h-3.5" />
+                      Maps
+                      <ExternalLink className="w-2.5 h-2.5" />
+                    </a>
+                  </div>
+                )}
               </div>
             </div>
-          )}
+            );
+          })()}
 
           {/* Event rows */}
           {items.map((item, index) => {
@@ -124,7 +142,7 @@ export const DaySection: React.FC<DaySectionProps> = ({
               <div key={item.id} className="relative pl-6 sm:pl-8 pb-6">
                 {showTimelineDot && (
                   <>
-                    <span className="absolute -left-[2.5rem] sm:-left-[3.5rem] top-4 w-[2rem] sm:w-[2.75rem] text-right pr-1 sm:pr-3 text-[9px] sm:text-[10px] font-semibold text-slate-400 dark:text-slate-500 leading-tight">
+                    <span className="absolute -left-[3.5rem] sm:-left-[4.5rem] top-4 w-[3rem] sm:w-[3.75rem] text-right pr-2 sm:pr-3 text-[9px] sm:text-[10px] font-semibold text-slate-400 dark:text-slate-500 leading-tight">
                       {format(parseISO(event.startDate), "h:mma")}
                     </span>
                     <div className="absolute -left-[5px] top-5 w-3 h-3 rounded-full bg-primary ring-4 ring-white dark:ring-slate-950" />
