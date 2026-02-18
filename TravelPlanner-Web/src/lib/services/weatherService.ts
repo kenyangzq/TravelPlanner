@@ -207,7 +207,7 @@ async function fetchWeatherFromApi(
     const daytimeWeather = day.daytimeForecast?.weather;
     const description = daytimeWeather?.description?.text || "";
     const iconBaseUri = daytimeWeather?.iconBaseUri || "";
-    const iconUri = iconBaseUri ? `${iconBaseUri}1x.png` : "";
+    const iconUri = iconBaseUri ? `${iconBaseUri}.png` : "";
 
     const precipProb = day.precipitationProbability ?? 0;
 

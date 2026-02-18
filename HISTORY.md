@@ -1,5 +1,11 @@
 # TravelPlanner Change History
 
+## 2026-02-17: Fix weather condition icons not displaying
+- **Bug**: Weather badges in day headers showed temperature but no weather condition icon (sunny/rainy/cloudy etc.)
+- **Root cause**: Icon URL was constructed with incorrect suffix `1x.png` — Google Weather API expects `.png` appended directly to `iconBaseUri`
+- **Fix**: Changed `${iconBaseUri}1x.png` to `${iconBaseUri}.png` in weatherService.ts
+- Files modified: `src/lib/services/weatherService.ts`
+
 ## 2026-02-16: Fix map view empty state display
 - **Bug**: When filtering by a date with no locations, the entire map and filter controls disappeared
 - **Fix**: Map and filter controls now remain visible even when no locations exist for the selected date
