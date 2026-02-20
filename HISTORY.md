@@ -1,5 +1,9 @@
 # TravelPlanner Change History
 
+## 2026-02-19: Remove unused day-map components
+- Deleted `day-map.tsx` and `leaflet-map.tsx` (Leaflet-based per-day inline map that was never wired into the UI — redundant with the existing Google Maps tab)
+- Removed `DayMapLocation` interface from `models.ts` (only used by the deleted components)
+
 ## 2026-02-17: Add hotel map links, fix map view dates, fix timeline overlap
 - **Hotel map links**: Day hotel headers ("You're staying here") now show a Maps link to the hotel, consistent with hotel event rows
 - **Map view date bug**: Fixed timezone issue where `new Date("YYYY-MM-DD")` parsed as UTC, causing a date before trip start to appear in filter buttons. Replaced with `parseISO` from date-fns throughout `trip-map-view.tsx`

@@ -170,14 +170,6 @@ export interface DayWeather {
   precipitationProbability: number;
 }
 
-// Day map location markers
-export interface DayMapLocation {
-  id: string;
-  type: "hotel" | "restaurant" | "flight";
-  name: string;
-  latitude: number;
-  longitude: number;
-}
 
 // Navigation link types
 export interface EventNavigationLink {
