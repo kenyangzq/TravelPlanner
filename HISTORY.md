@@ -1,5 +1,13 @@
 # TravelPlanner Change History
 
+## 2026-02-22: Fix Airbnb mode to use direct address geocoding instead of place search
+- **Problem**: Airbnb mode was still using `searchPlaces()` which searches for establishments/properties near the entered location
+- **Solution**: Created new `geocodeAddress()` function in `googlePlacesService.ts` that uses Google Geocoding API to geocode exact street addresses
+- **Updated `LocationSearchSection`**: Added `isAddressMode` prop — when true, uses `geocodeAddress()` instead of `searchPlaces()`
+- **Airbnb mode now works correctly**: User enters exact address (e.g., "123 Main St, Tokyo, Japan") and Google returns the precise coordinates for that address, not nearby properties
+- **Auto-selection**: Address geocoding auto-selects the single result (no dropdown needed) since geocoding an address should return a unique location
+- Files modified: `TravelPlanner-Web/src/lib/services/googlePlacesService.ts`, `TravelPlanner-Web/src/lib/services/locationService.ts`, `TravelPlanner-Web/src/components/forms/location-search-section.tsx`, `TravelPlanner-Web/src/components/forms/hotel-form.tsx`
+
 ## 2026-02-22: Add Airbnb/vacation rental mode to hotel form
 - Added checkbox option "This is an Airbnb / vacation rental" to hotel form
 - When Airbnb mode is enabled:

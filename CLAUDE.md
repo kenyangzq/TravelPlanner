@@ -169,7 +169,8 @@ TravelPlanner-Web/
 - **State separation**: Data state (Dexie) separate from UI state (Zustand) - mirrors iOS SwiftData + @Observable pattern
 - **Client-side flight API**: Flight search calls AeroDataBox directly from the browser (no API route proxy). API key exposed via `NEXT_PUBLIC_RAPIDAPI_KEY` — acceptable for personal app.
 - **City-biased location search**: Google Places Autocomplete with location bias toward trip cities (~50km radius)
-- **Google Maps JS API loading**: `googlePlacesService.ts` dynamically loads the Maps JS SDK with Places library. Handles deduplication with other components (e.g., trip-map-view) that may also load the SDK. Uses `AutocompleteService` and `PlacesService` for all location search — no server-side API routes needed (compatible with `output: 'export'`).
+- **Google Maps JS API loading**: `googlePlacesService.ts` dynamically loads the Maps JS SDK with Places library. Handles deduplication with other components (e.g., trip-map-view) that may also load the SDK. Uses `AutocompleteService`, `PlacesService`, and `Geocoder` for all location search — no server-side API routes needed (compatible with `output: 'export'`).
+- **Airbnb/vacation rental mode**: Hotel form has checkbox for "This is an Airbnb / vacation rental". When enabled, uses `geocodeAddress()` (Google Geocoding API) to get exact coordinates for the entered street address, rather than searching for nearby properties. The address entered IS the property location.
 - **Maps link**: Uses `googlePlaceName` (official Google Places name) with search-based URLs for reliable place page linking. Does not use `place_id` URLs (unreliable).
 - **Safe area handling**: Sticky headers use `sticky-safe` CSS class with `env(safe-area-inset-top)` for PWA status bar compatibility.
 - **PWA installation**: Can be installed on iPhone via "Add to Home Screen" in Safari, runs in standalone mode

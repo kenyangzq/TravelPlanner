@@ -181,6 +181,7 @@ export const HotelForm: React.FC<HotelFormProps> = ({
         coordinateFields={locationData}
         placeholder={isAirbnb ? "e.g., 123 Main St, Tokyo, Japan" : "Search for a place..."}
         label={isAirbnb ? "Address *" : "Location"}
+        isAddressMode={isAirbnb}
       />
 
       <div>

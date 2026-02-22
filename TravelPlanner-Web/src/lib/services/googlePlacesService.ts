@@ -493,3 +493,70 @@ export async function geocodeCity(
     return null;
   }
 }
+
+/**
+ * Geocode a street address to get its coordinates
+ * Used for Airbnb/Vacation rentals where we have an exact address
+ * Returns a LocationResult with the address details
+ */
+export async function geocodeAddress(
+  address: string,
+  cities: string[] = []
+): Promise<GoogleLocationResult | null> {
+  if (!API_KEY) {
+    console.error("Google Maps API key not configured");
+    return null;
+  }
+
+  if (!address || address.trim().length === 0) {
+    return null;
+  }
+
+  try {
+    await loadGoogleMapsApi();
+
+    const geocoder = new google.maps.Geocoder();
+
+    // Build the geocode request
+    let query = address;
+    // If cities provided, append the first city for better results
+    if (cities.length > 0 && !address.toLowerCase().includes(cities[0].toLowerCase())) {
+      query = `${address}, ${cities[0]}`;
+    }
+
+    return new Promise((resolve) => {
+      geocoder.geocode(
+        { address: query },
+        (results, status) => {
+          if (status !== google.maps.GeocoderStatus.OK || !results || results.length === 0) {
+            console.error("Address geocoding status:", status);
+            resolve(null);
+            return;
+          }
+
+          const place = results[0];
+          const addressComponents = extractAddressComponents(
+            (place.address_components || []).map((c) => ({
+              types: c.types,
+              long_name: c.long_name,
+              short_name: c.short_name,
+            }))
+          );
+
+          resolve({
+            place_id: place.place_id || "",
+            lat: place.geometry.location.lat(),
+            lng: place.geometry.location.lng(),
+            name: addressComponents.name || place.formatted_address.split(",")[0],
+            formatted_address: place.formatted_address,
+            address: addressComponents,
+            types: place.types,
+          });
+        }
+      );
+    });
+  } catch (error) {
+    console.error("Address geocoding error:", error);
+    return null;
+  }
+}

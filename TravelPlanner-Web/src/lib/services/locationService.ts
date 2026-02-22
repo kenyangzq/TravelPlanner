@@ -11,6 +11,7 @@ export {
   searchPlaces,
   reverseGeocode,
   geocodeAirportCode,
+  geocodeAddress,
   buildFormattedAddress,
   extractShortName,
   createSessionToken,

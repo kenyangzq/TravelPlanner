@@ -13,6 +13,7 @@ import { Label } from "../ui/label";
 import { Badge } from "../ui/badge";
 import {
   searchPlaces,
+  geocodeAddress,
   buildFormattedAddress,
   extractShortName,
   type LocationResult,
@@ -28,6 +29,8 @@ interface LocationSearchSectionProps {
   className?: string;
   placeholder?: string;
   label?: string;
+  /** If true, uses address geocoding instead of place search (for Airbnb/vacation rentals) */
+  isAddressMode?: boolean;
 }
 
 export const LocationSearchSection: React.FC<LocationSearchSectionProps> = ({
@@ -39,6 +42,7 @@ export const LocationSearchSection: React.FC<LocationSearchSectionProps> = ({
   className,
   placeholder = "Search for a place...",
   label = "Location",
+  isAddressMode = false,
 }) => {
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<LocationResult[] | null>(null);
@@ -59,20 +63,36 @@ export const LocationSearchSection: React.FC<LocationSearchSectionProps> = ({
     setSearchResults(null);
 
     try {
-      console.log("Searching for:", query, "in cities:", cities);
-      const results = await searchPlaces(query, cities);
+      if (isAddressMode) {
+        // For Airbnb/vacation rentals, geocode the address directly
+        console.log("Geocoding address:", query, "in cities:", cities);
+        const result = await geocodeAddress(query, cities);
 
-      console.log("Search results:", results);
+        console.log("Geocoding result:", result);
 
-      if (results.length === 0) {
-        setError("No results found. Try a different search term or search on Google Maps.");
-      } else if (results.length === 1) {
-        // Auto-select if only one result
-        onLocationSelected(results[0]);
-        setSearchResults(null);
+        if (!result) {
+          setError("Address not found. Please check the address and try again.");
+        } else {
+          // Auto-select the geocoded address
+          onLocationSelected(result);
+        }
       } else {
-        // Show dropdown if multiple results
-        setSearchResults(results);
+        // For hotels/restaurants, search for places
+        console.log("Searching for:", query, "in cities:", cities);
+        const results = await searchPlaces(query, cities);
+
+        console.log("Search results:", results);
+
+        if (results.length === 0) {
+          setError("No results found. Try a different search term or search on Google Maps.");
+        } else if (results.length === 1) {
+          // Auto-select if only one result
+          onLocationSelected(results[0]);
+          setSearchResults(null);
+        } else {
+          // Show dropdown if multiple results
+          setSearchResults(results);
+        }
       }
     } catch (err) {
       console.error("Search error:", err);
