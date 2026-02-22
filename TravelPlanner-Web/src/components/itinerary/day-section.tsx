@@ -9,8 +9,9 @@
 
 import * as React from "react";
 import { format, parseISO } from "date-fns";
-import { Building2, StickyNote, Pencil, MapPin, ExternalLink } from "lucide-react";
+import { Building2, StickyNote, Pencil, MapPin, ExternalLink, BookOpen } from "lucide-react";
 import { buildLocationSearchLink } from "@/lib/utils/navigationLinks";
+import { JournalDialog } from "./journal-dialog";
 import { FlightEventRow } from "./event-rows/flight-event-row";
 import { HotelEventRow } from "./event-rows/hotel-event-row";
 import { RestaurantEventRow } from "./event-rows/restaurant-event-row";
@@ -50,6 +51,7 @@ export const DaySection: React.FC<DaySectionProps> = ({
 }) => {
   const [isEditingReminder, setIsEditingReminder] = React.useState(false);
   const [reminderText, setReminderText] = React.useState(reminder?.content ?? "");
+  const [isJournalOpen, setIsJournalOpen] = React.useState(false);
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const dayKey = format(date, "yyyy-MM-dd");
 
@@ -87,8 +89,35 @@ export const DaySection: React.FC<DaySectionProps> = ({
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium">{format(date, "MMMM d, yyyy")}</p>
         </div>
-        {weather && <WeatherBadge weather={weather} />}
+        <div className="flex items-center gap-2">
+          {weather && <WeatherBadge weather={weather} />}
+          <button
+            onClick={() => setIsJournalOpen(true)}
+            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            aria-label="Open daily journal"
+            title={reminder?.content ? "View journal" : "Add journal entry"}
+          >
+            <BookOpen className={`w-5 h-5 ${reminder?.content ? "text-primary" : "text-slate-400 dark:text-slate-500"}`} />
+          </button>
+        </div>
       </div>
+
+      {/* Journal Dialog */}
+      <JournalDialog
+        isOpen={isJournalOpen}
+        onClose={() => setIsJournalOpen(false)}
+        date={date}
+        dayNumber={dayNumber}
+        initialContent={reminder?.content ?? ""}
+        onSave={(content) => {
+          if (content.trim()) {
+            onSaveReminder?.(dayKey, content);
+          } else if (reminder && onDeleteReminder) {
+            onDeleteReminder(reminder.id);
+          }
+          setIsJournalOpen(false);
+        }}
+      />
 
       {/* Timeline layout - Map and reminder hidden for now */}
       <div className="relative pl-16 sm:pl-20 pr-2 sm:pr-4">

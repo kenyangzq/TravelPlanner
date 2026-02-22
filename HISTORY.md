@@ -1,5 +1,24 @@
 # TravelPlanner Change History
 
+## 2026-02-22: Add daily journal feature to calendar view
+- Extended journal feature (previously only in list view) to the calendar view
+- Journal button (BookOpen icon) now appears in each day column header in the calendar grid
+- Button shows in primary color when an entry exists, gray when empty
+- Clicking opens the same JournalDialog component used in list view
+- Integrated using the existing `useReminders` hook for live queries
+- Files modified: `TravelPlanner-Web/src/components/itinerary/calendar-view.tsx`, `TravelPlanner-Web/CLAUDE.md`
+
+## 2026-02-22: Add daily journal feature to itinerary list view
+- Added journal button (BookOpen icon) in each day's header in the itinerary list view
+- Button opens a dialog with a textarea for writing/viewing the day's journal entry
+- Button shows in primary color when an entry exists, gray when empty
+- Journal entries are stored in the existing `reminders` IndexedDB table, keyed by `[tripId+dayKey]`
+- Dialog shows day number and date in the header, with a placeholder prompting users to write about their day
+- Word count displayed at the bottom of the textarea
+- Save button commits the entry; Cancel closes without saving; empty content deletes existing entry
+- Files created: `TravelPlanner-Web/src/components/itinerary/journal-dialog.tsx`
+- Files modified: `TravelPlanner-Web/src/components/itinerary/day-section.tsx`, `TravelPlanner-Web/CLAUDE.md`
+
 ## 2026-02-22: Fix Airbnb mode to use direct address geocoding instead of place search
 - **Problem**: Airbnb mode was still using `searchPlaces()` which searches for establishments/properties near the entered location
 - **Solution**: Created new `geocodeAddress()` function in `googlePlacesService.ts` that uses Google Geocoding API to geocode exact street addresses

@@ -8,11 +8,13 @@
 import * as React from "react";
 import { format, eachDayOfInterval, parseISO, startOfDay, isSameDay } from "date-fns";
 import { EmptyState } from "../ui/empty-state";
-import { Calendar, MapPin, Plane, ExternalLink, Trash2 } from "lucide-react";
+import { Calendar, MapPin, Plane, ExternalLink, Trash2, BookOpen } from "lucide-react";
 import type { Trip, HotelEvent, TripEvent } from "@/lib/models";
 import type { EventsByDayResult } from "@/lib/hooks/useTripDetail";
 import { getEventIcon, getEventColor } from "@/lib/models";
 import { isFlightEvent, isHotelEvent } from "@/lib/db";
+import { JournalDialog } from "./journal-dialog";
+import { useReminders } from "@/lib/hooks/useReminders";
 
 interface CalendarViewProps {
   tripId: string;
@@ -31,6 +33,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   onEventClick,
   onDeleteEvent,
 }) => {
+  // Journal dialog state and reminders hook
+  const [journalDay, setJournalDay] = React.useState<{ date: Date; dayNumber: number } | null>(null);
+  const { remindersByDay, saveReminder, deleteReminder } = useReminders(tripId);
+
   // Responsive slot height: 40px on mobile, 64px on desktop
   const [slotHeight, setSlotHeight] = React.useState(64);
   React.useEffect(() => {
@@ -162,19 +168,33 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 </div>
 
                 {/* Day columns */}
-                {tripDays.map((day) => (
-                  <div
-                    key={day.toISOString()}
-                    className="w-20 sm:w-32 flex-shrink-0 p-1.5 sm:p-2 text-center border-l dark:border-slate-700"
-                  >
-                    <div className="text-[10px] sm:text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
-                      {format(day, "EEE")}
+                {tripDays.map((day, index) => {
+                  const dayKey = format(day, "yyyy-MM-dd");
+                  const reminder = remindersByDay.get(dayKey);
+                  return (
+                    <div
+                      key={day.toISOString()}
+                      className="w-20 sm:w-32 flex-shrink-0 p-1.5 sm:p-2 text-center border-l dark:border-slate-700"
+                    >
+                      <div className="flex items-center justify-center gap-1">
+                        <div className="text-[10px] sm:text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
+                          {format(day, "EEE")}
+                        </div>
+                        <button
+                          onClick={() => setJournalDay({ date: day, dayNumber: index + 1 })}
+                          className="p-0.5 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                          aria-label="Open daily journal"
+                          title={reminder?.content ? "View journal" : "Add journal entry"}
+                        >
+                          <BookOpen className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${reminder?.content ? "text-primary" : "text-slate-400 dark:text-slate-500"}`} />
+                        </button>
+                      </div>
+                      <div className="text-base sm:text-xl font-bold text-slate-900 dark:text-slate-100 mt-0.5">
+                        {format(day, "d")}
+                      </div>
                     </div>
-                    <div className="text-base sm:text-xl font-bold text-slate-900 dark:text-slate-100 mt-0.5">
-                      {format(day, "d")}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -257,6 +277,27 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
         </div>
       </div>
       {/* End Calendar Grid */}
+
+      {/* Journal Dialog */}
+      {journalDay && (
+        <JournalDialog
+          isOpen={!!journalDay}
+          onClose={() => setJournalDay(null)}
+          date={journalDay.date}
+          dayNumber={journalDay.dayNumber}
+          initialContent={remindersByDay.get(format(journalDay.date, "yyyy-MM-dd"))?.content ?? ""}
+          onSave={(content) => {
+            const dayKey = format(journalDay.date, "yyyy-MM-dd");
+            const reminder = remindersByDay.get(dayKey);
+            if (content.trim()) {
+              saveReminder(dayKey, content);
+            } else if (reminder) {
+              deleteReminder(reminder.id);
+            }
+            setJournalDay(null);
+          }}
+        />
+      )}
     </div>
   );
 };
