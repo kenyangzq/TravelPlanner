@@ -26,6 +26,8 @@ interface LocationSearchSectionProps {
   onLocationSelected: (result: LocationResult) => void;
   coordinateFields?: { latitude?: number; longitude?: number };
   className?: string;
+  placeholder?: string;
+  label?: string;
 }
 
 export const LocationSearchSection: React.FC<LocationSearchSectionProps> = ({
@@ -35,6 +37,8 @@ export const LocationSearchSection: React.FC<LocationSearchSectionProps> = ({
   onLocationSelected,
   coordinateFields,
   className,
+  placeholder = "Search for a place...",
+  label = "Location",
 }) => {
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<LocationResult[] | null>(null);
@@ -100,13 +104,13 @@ export const LocationSearchSection: React.FC<LocationSearchSectionProps> = ({
     <div className={className}>
       <div className="flex gap-2">
         <div className="flex-1">
-          <Label htmlFor="location-search">Location</Label>
+          <Label htmlFor="location-search">{label}</Label>
           <Input
             id="location-search"
             type="text"
             value={query}
             onChange={(e) => handleQueryChange(e.target.value)}
-            placeholder="Search for a place..."
+            placeholder={placeholder}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();

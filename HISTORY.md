@@ -1,5 +1,18 @@
 # TravelPlanner Change History
 
+## 2026-02-22: Add Airbnb/vacation rental mode to hotel form
+- Added checkbox option "This is an Airbnb / vacation rental" to hotel form
+- When Airbnb mode is enabled:
+  - Hotel name field is hidden (auto-uses Google Place name or "Airbnb")
+  - Shows info banner: "Enter the exact address below, then tap 'Find' to confirm the location with Google Places"
+  - Address placeholder changes to "e.g., 123 Main St, Tokyo, Japan"
+  - Location label changes to "Address *" (required)
+- Save validation requires coordinates to be set for Airbnb bookings
+- Save button text dynamically changes to "Add/Update Airbnb" when mode is active
+- Created new Checkbox UI component (`src/components/ui/checkbox.tsx`)
+- Files modified: `TravelPlanner-Web/src/components/forms/hotel-form.tsx`, `TravelPlanner-Web/src/components/forms/location-search-section.tsx`
+- Files created: `TravelPlanner-Web/src/components/ui/checkbox.tsx`
+
 ## 2026-02-19: Remove unused day-map components
 - Deleted `day-map.tsx` and `leaflet-map.tsx` (Leaflet-based per-day inline map that was never wired into the UI — redundant with the existing Google Maps tab)
 - Removed `DayMapLocation` interface from `models.ts` (only used by the deleted components)

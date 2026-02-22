@@ -12,6 +12,7 @@ import { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
+import { Checkbox } from "../ui/checkbox";
 import { LocationSearchSection } from "./location-search-section";
 import { createDefaultHotelEvent } from "@/lib/db";
 import { useEvents } from "@/lib/hooks/useEvents";
@@ -34,6 +35,7 @@ export const HotelForm: React.FC<HotelFormProps> = ({
   onClose,
 }) => {
   const { createEvent, updateEvent } = useEvents(tripId);
+  const [isAirbnb, setIsAirbnb] = useState(false);
   const [hotelName, setHotelName] = useState(existingEvent?.hotelName || "");
   const [checkInDate, setCheckInDate] = useState(
     existingEvent?.checkInDate ? existingEvent.checkInDate.split("T")[0] : trip.startDate
@@ -48,7 +50,7 @@ export const HotelForm: React.FC<HotelFormProps> = ({
     existingEvent?.checkOutDate ? existingEvent.checkOutDate.split("T")[1]?.slice(0, 5) || "11:00" : "11:00"
   );
   const [locationQuery, setLocationQuery] = useState(
-    existingEvent?.hotelName || existingEvent?.hotelAddress || ""
+    existingEvent?.hotelAddress || ""
   );
   const [locationData, setLocationData] = useState<{
     address: string;
@@ -72,7 +74,7 @@ export const HotelForm: React.FC<HotelFormProps> = ({
   const hasCoordinates = locationData.latitude !== undefined && locationData.longitude !== undefined;
 
   const handleLocationSelected = (result: LocationResult) => {
-    setLocationQuery(result.name);
+    setLocationQuery(result.formatted_address);
     setLocationData({
       address: result.formatted_address,
       googlePlaceName: result.name, // Store official Google Places name
@@ -83,7 +85,17 @@ export const HotelForm: React.FC<HotelFormProps> = ({
   };
 
   const handleSave = async () => {
-    if (!hotelName.trim()) {
+    // For Airbnb, use the Google Place name or fallback to "Airbnb"
+    const finalHotelName = isAirbnb
+      ? (locationData.googlePlaceName || "Airbnb")
+      : hotelName.trim();
+
+    if (!finalHotelName || (!isAirbnb && !hotelName.trim())) {
+      return;
+    }
+
+    // For Airbnb, require location to be set
+    if (isAirbnb && !locationData.latitude) {
       return;
     }
 
@@ -91,8 +103,8 @@ export const HotelForm: React.FC<HotelFormProps> = ({
     const endDateTime = `${checkOutDate}T${checkOutTime}`;
 
     const eventData: Omit<HotelEvent, "id"> = {
-      ...createDefaultHotelEvent(tripId, hotelName.trim(), startDateTime, endDateTime),
-      hotelName: hotelName.trim(),
+      ...createDefaultHotelEvent(tripId, finalHotelName, startDateTime, endDateTime),
+      hotelName: finalHotelName,
       googlePlaceName: locationData.googlePlaceName,
       googlePlaceId: locationData.googlePlaceId,
       checkInDate: startDateTime,
@@ -120,17 +132,46 @@ export const HotelForm: React.FC<HotelFormProps> = ({
 
   return (
     <div className="space-y-4">
-      <div>
-        <Label htmlFor="hotel-name">Hotel Name *</Label>
-        <Input
-          id="hotel-name"
-          type="text"
-          value={hotelName}
-          onChange={(e) => setHotelName(e.target.value)}
-          placeholder="e.g., Grand Hyatt Tokyo"
-          required
+      <div className="flex items-center gap-2">
+        <Checkbox
+          id="is-airbnb"
+          checked={isAirbnb}
+          onChange={(e) => {
+            setIsAirbnb(e.target.checked);
+            // Reset hotel name when toggling Airbnb mode
+            if (e.target.checked) {
+              setHotelName("Airbnb");
+            } else {
+              setHotelName("");
+            }
+          }}
         />
+        <Label htmlFor="is-airbnb" className="cursor-pointer">
+          This is an Airbnb / vacation rental
+        </Label>
       </div>
+
+      {!isAirbnb && (
+        <div>
+          <Label htmlFor="hotel-name">Hotel Name *</Label>
+          <Input
+            id="hotel-name"
+            type="text"
+            value={hotelName}
+            onChange={(e) => setHotelName(e.target.value)}
+            placeholder="e.g., Grand Hyatt Tokyo"
+            required
+          />
+        </div>
+      )}
+
+      {isAirbnb && (
+        <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
+          <p className="text-sm text-blue-800 dark:text-blue-200">
+            Enter the exact address below, then tap "Find" to confirm the location with Google Places.
+          </p>
+        </div>
+      )}
 
       <LocationSearchSection
         query={locationQuery}
@@ -138,6 +179,8 @@ export const HotelForm: React.FC<HotelFormProps> = ({
         cities={trip.citiesRaw ? trip.citiesRaw.split("|||").filter(c => c) : []}
         onLocationSelected={handleLocationSelected}
         coordinateFields={locationData}
+        placeholder={isAirbnb ? "e.g., 123 Main St, Tokyo, Japan" : "Search for a place..."}
+        label={isAirbnb ? "Address *" : "Location"}
       />
 
       <div>
@@ -182,10 +225,14 @@ export const HotelForm: React.FC<HotelFormProps> = ({
         <Button
           type="button"
           onClick={handleSave}
-          disabled={!hotelName.trim() || !checkInDate || !checkOutDate}
+          disabled={
+            !checkInDate || !checkOutDate ||
+            (!isAirbnb && !hotelName.trim()) ||
+            (isAirbnb && !locationData.latitude)
+          }
           className="flex-1"
         >
-          {isEditing ? "Update" : "Add"} Hotel
+          {isEditing ? "Update" : "Add"} {isAirbnb ? "Airbnb" : "Hotel"}
         </Button>
       </div>
     </div>
