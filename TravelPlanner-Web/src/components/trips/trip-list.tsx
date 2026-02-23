@@ -2,15 +2,17 @@
  * TravelPlanner Web - Trip List Component
  *
  * Displays list of trips with empty state.
+ * Past trips (endDate before today) are collapsed at the bottom.
  */
 
 import * as React from "react";
 import { TripRow } from "./trip-row";
 import { EmptyState } from "../ui/empty-state";
-import { MapPin } from "lucide-react";
+import { MapPin, ChevronDown, ChevronRight } from "lucide-react";
 import type { Trip } from "@/lib/models";
 import { db } from "@/lib/db";
 import { useLiveQuery } from "dexie-react-hooks";
+import { parseISO, startOfDay } from "date-fns";
 
 interface TripListProps {
   trips: Trip[];
@@ -32,6 +34,8 @@ export const TripList: React.FC<TripListProps> = ({
   onDeleteTrip,
   onCreateTrip,
 }) => {
+  const [showPastTrips, setShowPastTrips] = React.useState(false);
+
   // Fetch event counts for all trips by type
   const eventCounts = useLiveQuery(() => {
     return Promise.all(
@@ -56,6 +60,11 @@ export const TripList: React.FC<TripListProps> = ({
     });
   }, [trips]);
 
+  // Split trips into upcoming and past
+  const today = startOfDay(new Date());
+  const upcomingTrips = trips.filter(t => parseISO(t.endDate) >= today);
+  const pastTrips = trips.filter(t => parseISO(t.endDate) < today);
+
   if (trips.length === 0) {
     return (
       <EmptyState
@@ -70,9 +79,9 @@ export const TripList: React.FC<TripListProps> = ({
     );
   }
 
-  return (
+  const renderTripGrid = (tripList: Trip[]) => (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-8">
-      {trips.map((trip) => {
+      {tripList.map((trip) => {
         const counts = eventCounts?.get(trip.id);
         return (
           <TripRow
@@ -87,6 +96,33 @@ export const TripList: React.FC<TripListProps> = ({
           />
         );
       })}
+    </div>
+  );
+
+  return (
+    <div className="space-y-6 sm:space-y-8">
+      {/* Upcoming trips */}
+      {upcomingTrips.length > 0 && renderTripGrid(upcomingTrips)}
+
+      {/* Past trips section */}
+      {pastTrips.length > 0 && (
+        <div>
+          <button
+            onClick={() => setShowPastTrips(!showPastTrips)}
+            className="flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 transition-colors mb-4"
+          >
+            {showPastTrips ? (
+              <ChevronDown className="w-4 h-4" />
+            ) : (
+              <ChevronRight className="w-4 h-4" />
+            )}
+            <span className="text-sm font-medium">
+              Past Trips ({pastTrips.length})
+            </span>
+          </button>
+          {showPastTrips && renderTripGrid(pastTrips)}
+        </div>
+      )}
     </div>
   );
 };

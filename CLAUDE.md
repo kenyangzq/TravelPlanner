@@ -186,6 +186,7 @@ TravelPlanner-Web/
 - **Calendar view event positioning**: Events are rendered directly inside the day column div (not inside per-slot divs) using `position: absolute` with `top` calculated as `(startHour - 6) * slotHeight`. Slot height is responsive: 40px on mobile (<640px), 64px on desktop. Column width is 80px on mobile, 128px on desktop.
 - **Mobile responsiveness**: All UI components use `sm:` Tailwind breakpoint (640px) for mobile vs desktop sizing. Button text shortens on mobile (e.g., "Add Event" → "Add", "Create New Trip" → "New", "Export" → icon-only). Timeline padding, font sizes, and spacing all scale down on mobile. Calendar header and body share a single scroll container so they scroll together horizontally.
 - **Azure routing fix**: All dynamic route navigation URLs use trailing slashes (`/trips/${tripId}/`) to match `trailingSlash: true` production config, preventing "Trip Not Found" errors.
+- **Past trips collapsed**: Trips whose `endDate` is before today are separated from upcoming trips and shown in a collapsible "Past Trips" section at the bottom of the trip list. Collapsed by default, users click to expand/collapse.
 
 ### API Configuration (Web)
 - RapidAPI key stored in `.env.local` → `NEXT_PUBLIC_RAPIDAPI_KEY` (baked into client bundle at build time)

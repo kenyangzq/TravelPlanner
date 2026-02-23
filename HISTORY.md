@@ -1,5 +1,12 @@
 # TravelPlanner Change History
 
+## 2026-02-23: Hide past trips in collapsible section at bottom of trip list
+- Past trips (endDate before today) are now separated from upcoming trips and placed at the bottom of the list
+- Past trips are collapsed by default behind a "Past Trips (N)" toggle button
+- Users can expand/collapse the section to view or hide past trips
+- Upcoming trips remain at the top in the default grid layout
+- Files modified: `TravelPlanner-Web/src/components/trips/trip-list.tsx`
+
 ## 2026-02-22: Add daily journal feature to calendar view
 - Extended journal feature (previously only in list view) to the calendar view
 - Journal button (BookOpen icon) now appears in each day column header in the calendar grid
