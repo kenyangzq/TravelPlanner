@@ -3,8 +3,12 @@
 ## Rules
 - **Always update this CLAUDE.md file immediately after making any changes** to reflect the current state of the codebase. This includes bug fixes, new features, refactoring, or any other code changes.
 - **Always append to HISTORY.md** after completing any task — see HISTORY.md for format. This file is append-only (newest entries at the top).
-- **Do NOT commit and push changes until explicitly asked** by the user.
-- **Do NOT build the project unless explicitly asked** by the user. Just make the code changes and inform the user when complete.
+- **CRITICAL: After completing ANY code change, ALWAYS:**
+  1. **Commit** the changes to git (the prepare-commit-msg hook will auto-increment the version)
+  2. **Push** the changes to GitHub
+  3. Do NOT wait for user to ask - commit and push automatically after every task
+- **Version tracking**: `TravelPlanner-Web/VERSION` file contains semver version (e.g., `1.0.0`). Git hook auto-increments patch version on each commit. `package.json` version stays in sync.
+- **Do NOT build the project unless explicitly asked** by the user. Just make the code changes, commit, push, and inform the user when complete.
 
 ## Project Overview
 TravelPlanner is a cross-platform travel planning app with both iOS and web (PWA) versions. Allows users to create trip itineraries with flights, car rentals, hotels, restaurants, and activities. Features automatic navigation links between consecutive events, day-level hotel header with navigation to first event, calendar view with hotels on all covered dates, tap-to-edit, and location finding with city-based biasing.

@@ -9,6 +9,7 @@
 
 import { useTrips } from "@/lib/hooks/useTrips";
 import { useUIStore } from "@/lib/store";
+import { useVersion } from "@/lib/hooks/useVersion";
 import { TripList } from "@/components/trips/trip-list";
 import { NewTripDialog } from "@/components/trips/new-trip-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -19,6 +20,7 @@ import { useRouter } from "next/navigation";
 export default function HomePage() {
   const { trips, deleteTrip } = useTrips();
   const router = useRouter();
+  const version = useVersion();
   const {
     isNewTripDialogOpen,
     setIsNewTripDialogOpen,
@@ -38,9 +40,16 @@ export default function HomePage() {
       {/* Header */}
       <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-primary/10 sticky-safe px-4 sm:px-8 py-3 sm:py-4 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">
-            My Trips
-          </h1>
+          <div className="flex items-baseline gap-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">
+              My Trips
+            </h1>
+            {version && (
+              <span className="text-xs text-slate-400 dark:text-slate-500 font-mono">
+                v{version}
+              </span>
+            )}
+          </div>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
             {trips.length} trip{trips.length !== 1 ? "s" : ""} planned
           </p>
