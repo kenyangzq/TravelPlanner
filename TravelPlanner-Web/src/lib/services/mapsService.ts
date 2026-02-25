@@ -114,7 +114,7 @@ export function locationURL(
 
 /**
  * Build Google Maps search or pin URL based on available data
- * Prioritizes name+address search (reliable), then name only, then coordinates
+ * Prioritizes coordinates (most accurate), then name+address, then name/address only
  */
 export function buildLocationLink(
   name?: string,
@@ -122,6 +122,17 @@ export function buildLocationLink(
   lat?: number,
   lng?: number
 ): string | null {
+  // If we have coordinates, use them directly for accurate location
+  // This avoids Google Maps returning local results based on user's IP/location
+  if (lat !== undefined && lng !== undefined) {
+    // Include name in query if available for better place page experience
+    if (name) {
+      const query = encodeURIComponent(`${lat},${lng} ${name}`);
+      return `https://www.google.com/maps/search/?api=1&query=${query}`;
+    }
+    return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+  }
+
   // Use name + address search (opens place page with reviews)
   if (name && address) {
     const query = encodeURIComponent(`${name} ${address}`);
@@ -137,11 +148,6 @@ export function buildLocationLink(
   // Use address only
   if (address) {
     return searchURL(address);
-  }
-
-  // Fall back to coordinates (just a pin, not tied to a business)
-  if (lat !== undefined && lng !== undefined) {
-    return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
   }
 
   return null;

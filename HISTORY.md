@@ -1,5 +1,12 @@
 # TravelPlanner Change History
 
+## 2026-02-25: Fix location link priority to use coordinates first
+- **Problem**: When users had coordinates stored, location links still prioritized name+address search which could return local results based on user's current IP/location
+- **Solution**: Reordered `buildLocationLink()` to prioritize coordinates (most accurate) → name+address → name/address only
+- Coordinates now included directly in Google Maps search query with optional name for better place page experience
+- This ensures saved locations always open at the correct coordinates regardless of user's current location
+- Files modified: `TravelPlanner-Web/src/lib/services/mapsService.ts`
+
 ## 2026-02-23: Hide past trips in collapsible section at bottom of trip list
 - Past trips (endDate before today) are now separated from upcoming trips and placed at the bottom of the list
 - Past trips are collapsed by default behind a "Past Trips (N)" toggle button
