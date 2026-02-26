@@ -207,10 +207,10 @@ export const FlightForm: React.FC<FlightFormProps> = ({
       {/* Results section */}
       {fetchedData && (
         <div className="space-y-3 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Plane className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-              <h3 className="font-semibold text-blue-900 dark:text-blue-100">
+          <div className="flex items-center justify-between mb-3 gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <Plane className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+              <h3 className="font-semibold text-blue-900 dark:text-blue-100 truncate">
                 {fetchedData.airlineName} {fetchedData.flightNumber}
               </h3>
             </div>
@@ -219,17 +219,17 @@ export const FlightForm: React.FC<FlightFormProps> = ({
               variant="ghost"
               size="sm"
               onClick={() => setManualEditMode(!manualEditMode)}
-              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex-shrink-0"
             >
               {manualEditMode ? (
                 <>
                   <Check className="w-4 h-4 mr-1" />
-                  Done
+                  <span className="hidden sm:inline">Done</span>
                 </>
               ) : (
                 <>
                   <Edit3 className="w-4 h-4 mr-1" />
-                  Edit Times
+                  <span className="hidden sm:inline">Edit Times</span>
                 </>
               )}
             </Button>
@@ -243,41 +243,59 @@ export const FlightForm: React.FC<FlightFormProps> = ({
                 <span>Manually Edit Schedule</span>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-3">
                 {/* Departure Date/Time */}
-                <div className="space-y-2">
-                  <Label className="text-xs text-gray-600 dark:text-gray-400">Departure Date</Label>
-                  <Input
-                    type="date"
-                    value={manualDepartureDate}
-                    onChange={(e) => handleManualFieldChange("departureDate", e.target.value)}
-                    className="h-9 text-sm"
-                  />
-                  <Label className="text-xs text-gray-600 dark:text-gray-400">Departure Time</Label>
-                  <Input
-                    type="time"
-                    value={manualDepartureTime}
-                    onChange={(e) => handleManualFieldChange("departureTime", e.target.value)}
-                    className="h-9 text-sm"
-                  />
+                <div>
+                  <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5 sm:hidden">Departure</p>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-1 sm:space-y-2 sm:gap-0">
+                    <div>
+                      <Label className="text-xs text-gray-600 dark:text-gray-400 hidden sm:block">Departure Date</Label>
+                      <Label className="text-xs text-gray-600 dark:text-gray-400 sm:hidden">Date</Label>
+                      <Input
+                        type="date"
+                        value={manualDepartureDate}
+                        onChange={(e) => handleManualFieldChange("departureDate", e.target.value)}
+                        className="h-9 text-sm mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-gray-600 dark:text-gray-400 hidden sm:block">Departure Time</Label>
+                      <Label className="text-xs text-gray-600 dark:text-gray-400 sm:hidden">Time</Label>
+                      <Input
+                        type="time"
+                        value={manualDepartureTime}
+                        onChange={(e) => handleManualFieldChange("departureTime", e.target.value)}
+                        className="h-9 text-sm mt-1"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 {/* Arrival Date/Time */}
-                <div className="space-y-2">
-                  <Label className="text-xs text-gray-600 dark:text-gray-400">Arrival Date</Label>
-                  <Input
-                    type="date"
-                    value={manualArrivalDate}
-                    onChange={(e) => handleManualFieldChange("arrivalDate", e.target.value)}
-                    className="h-9 text-sm"
-                  />
-                  <Label className="text-xs text-gray-600 dark:text-gray-400">Arrival Time</Label>
-                  <Input
-                    type="time"
-                    value={manualArrivalTime}
-                    onChange={(e) => handleManualFieldChange("arrivalTime", e.target.value)}
-                    className="h-9 text-sm"
-                  />
+                <div>
+                  <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5 sm:hidden">Arrival</p>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-1 sm:space-y-2 sm:gap-0">
+                    <div>
+                      <Label className="text-xs text-gray-600 dark:text-gray-400 hidden sm:block">Arrival Date</Label>
+                      <Label className="text-xs text-gray-600 dark:text-gray-400 sm:hidden">Date</Label>
+                      <Input
+                        type="date"
+                        value={manualArrivalDate}
+                        onChange={(e) => handleManualFieldChange("arrivalDate", e.target.value)}
+                        className="h-9 text-sm mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-gray-600 dark:text-gray-400 hidden sm:block">Arrival Time</Label>
+                      <Label className="text-xs text-gray-600 dark:text-gray-400 sm:hidden">Time</Label>
+                      <Input
+                        type="time"
+                        value={manualArrivalTime}
+                        onChange={(e) => handleManualFieldChange("arrivalTime", e.target.value)}
+                        className="h-9 text-sm mt-1"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
