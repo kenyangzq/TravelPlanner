@@ -20,7 +20,7 @@ import {
 import { useEvents } from "@/lib/hooks/useEvents";
 import { searchFlight } from "@/lib/services/flightService";
 import type { Trip, FlightEvent } from "@/lib/models";
-import { Search, Loader2, AlertCircle, Plane } from "lucide-react";
+import { Search, Loader2, AlertCircle, Plane, Clock, Edit3, Check } from "lucide-react";
 
 interface FlightFormProps {
   tripId: string;
@@ -44,7 +44,48 @@ export const FlightForm: React.FC<FlightFormProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [fetchedData, setFetchedData] = useState<FlightEvent | null>(existingEvent || null);
 
+  // Manual edit mode states
+  const [manualEditMode, setManualEditMode] = useState(false);
+  const [manualDepartureDate, setManualDepartureDate] = useState("");
+  const [manualDepartureTime, setManualDepartureTime] = useState("");
+  const [manualArrivalDate, setManualArrivalDate] = useState("");
+  const [manualArrivalTime, setManualArrivalTime] = useState("");
+  const [hasManuallyEdited, setHasManuallyEdited] = useState(false);
+
   const isEditing = existingEvent !== null;
+
+  // Initialize manual edit values when fetched data changes
+  React.useEffect(() => {
+    if (fetchedData) {
+      const departureDate = fetchedData.startDate ? new Date(fetchedData.startDate) : null;
+      const arrivalDate = fetchedData.endDate ? new Date(fetchedData.endDate) : null;
+
+      setManualDepartureDate(departureDate ? departureDate.toISOString().split("T")[0] : "");
+      setManualDepartureTime(departureDate ? departureDate.toTimeString().slice(0, 5) : "");
+      setManualArrivalDate(arrivalDate ? arrivalDate.toISOString().split("T")[0] : "");
+      setManualArrivalTime(arrivalDate ? arrivalDate.toTimeString().slice(0, 5) : "");
+      setHasManuallyEdited(false); // Reset edit flag when new data is fetched
+    }
+  }, [fetchedData]);
+
+  // Mark as manually edited when any field changes
+  const handleManualFieldChange = (field: string, value: string) => {
+    setHasManuallyEdited(true);
+    switch (field) {
+      case "departureDate":
+        setManualDepartureDate(value);
+        break;
+      case "departureTime":
+        setManualDepartureTime(value);
+        break;
+      case "arrivalDate":
+        setManualArrivalDate(value);
+        break;
+      case "arrivalTime":
+        setManualArrivalTime(value);
+        break;
+    }
+  };
 
   const handleSearch = async () => {
     if (!flightNumber.trim() || !date) {
@@ -72,12 +113,31 @@ export const FlightForm: React.FC<FlightFormProps> = ({
       return;
     }
 
+    // Apply manual date/time edits if user has made manual changes
+    let dataToSave = { ...fetchedData };
+
+    if (hasManuallyEdited) {
+      // Parse manual departure date/time
+      if (manualDepartureDate && manualDepartureTime) {
+        const departureDateTime = new Date(`${manualDepartureDate}T${manualDepartureTime}`);
+        dataToSave.startDate = departureDateTime.toISOString();
+        dataToSave.scheduledDepartureTime = departureDateTime.toISOString();
+      }
+
+      // Parse manual arrival date/time
+      if (manualArrivalDate && manualArrivalTime) {
+        const arrivalDateTime = new Date(`${manualArrivalDate}T${manualArrivalTime}`);
+        dataToSave.endDate = arrivalDateTime.toISOString();
+        dataToSave.scheduledArrivalTime = arrivalDateTime.toISOString();
+      }
+    }
+
     try {
       if (isEditing && existingEvent) {
-        await updateEvent(existingEvent.id, fetchedData);
+        await updateEvent(existingEvent.id, dataToSave);
       } else {
         await createEvent({
-          ...fetchedData,
+          ...dataToSave,
           tripId,
         });
       }
@@ -147,12 +207,81 @@ export const FlightForm: React.FC<FlightFormProps> = ({
       {/* Results section */}
       {fetchedData && (
         <div className="space-y-3 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
-          <div className="flex items-center gap-2 mb-3">
-            <Plane className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-            <h3 className="font-semibold text-blue-900 dark:text-blue-100">
-              {fetchedData.airlineName} {fetchedData.flightNumber}
-            </h3>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Plane className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              <h3 className="font-semibold text-blue-900 dark:text-blue-100">
+                {fetchedData.airlineName} {fetchedData.flightNumber}
+              </h3>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setManualEditMode(!manualEditMode)}
+              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+            >
+              {manualEditMode ? (
+                <>
+                  <Check className="w-4 h-4 mr-1" />
+                  Done
+                </>
+              ) : (
+                <>
+                  <Edit3 className="w-4 h-4 mr-1" />
+                  Edit Times
+                </>
+              )}
+            </Button>
           </div>
+
+          {/* Manual edit section */}
+          {manualEditMode && (
+            <div className="space-y-3 p-3 bg-white dark:bg-gray-800 rounded-md border border-blue-200 dark:border-blue-700">
+              <div className="flex items-center gap-2 text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">
+                <Clock className="w-4 h-4" />
+                <span>Manually Edit Schedule</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                {/* Departure Date/Time */}
+                <div className="space-y-2">
+                  <Label className="text-xs text-gray-600 dark:text-gray-400">Departure Date</Label>
+                  <Input
+                    type="date"
+                    value={manualDepartureDate}
+                    onChange={(e) => handleManualFieldChange("departureDate", e.target.value)}
+                    className="h-9 text-sm"
+                  />
+                  <Label className="text-xs text-gray-600 dark:text-gray-400">Departure Time</Label>
+                  <Input
+                    type="time"
+                    value={manualDepartureTime}
+                    onChange={(e) => handleManualFieldChange("departureTime", e.target.value)}
+                    className="h-9 text-sm"
+                  />
+                </div>
+
+                {/* Arrival Date/Time */}
+                <div className="space-y-2">
+                  <Label className="text-xs text-gray-600 dark:text-gray-400">Arrival Date</Label>
+                  <Input
+                    type="date"
+                    value={manualArrivalDate}
+                    onChange={(e) => handleManualFieldChange("arrivalDate", e.target.value)}
+                    className="h-9 text-sm"
+                  />
+                  <Label className="text-xs text-gray-600 dark:text-gray-400">Arrival Time</Label>
+                  <Input
+                    type="time"
+                    value={manualArrivalTime}
+                    onChange={(e) => handleManualFieldChange("arrivalTime", e.target.value)}
+                    className="h-9 text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
