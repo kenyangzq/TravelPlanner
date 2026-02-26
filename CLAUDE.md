@@ -1,12 +1,19 @@
 # TravelPlanner
 
 ## Rules
+## ⚠️ MOST IMPORTANT: COMMIT AND PUSH ⚠️
+**AFTER EVERY CODE CHANGE, YOU MUST:**
+1. `git add` the changed files
+2. `git commit` (prepare-commit-msg hook auto-increments version)
+3. `git push` to GitHub
+
+**DO THIS IMMEDIATELY after completing the task. DO NOT wait for the user to ask.**
+
+---
+
+## Other Rules
 - **Always update this CLAUDE.md file immediately after making any changes** to reflect the current state of the codebase. This includes bug fixes, new features, refactoring, or any other code changes.
 - **Always append to HISTORY.md** after completing any task — see HISTORY.md for format. This file is append-only (newest entries at the top).
-- **CRITICAL: After completing ANY code change, ALWAYS:**
-  1. **Commit** the changes to git (the prepare-commit-msg hook will auto-increment the version)
-  2. **Push** the changes to GitHub
-  3. Do NOT wait for user to ask - commit and push automatically after every task
 - **Version tracking**: `TravelPlanner-Web/VERSION` file contains semver version (e.g., `1.0.0`). Git hook auto-increments patch version on each commit. `package.json` version stays in sync.
 - **Do NOT build the project unless explicitly asked** by the user. Just make the code changes, commit, push, and inform the user when complete.
 
