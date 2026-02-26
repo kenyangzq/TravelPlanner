@@ -21,6 +21,42 @@ export interface ParsedLocation {
 }
 
 /**
+ * Detect the type of a Google Maps URL.
+ *
+ * Returns:
+ * - "directions" for /maps/dir/ URLs
+ * - "list" for /maps/placelists/ or shared list URLs
+ * - "shortened" for maps.app.goo.gl or goo.gl/maps URLs
+ * - "other" for other Google Maps URLs
+ * - null for non-Google Maps URLs
+ */
+export function detectGoogleMapsUrlType(
+  url: string
+): "directions" | "list" | "shortened" | "other" | null {
+  const trimmed = url.trim();
+
+  // Shortened URLs
+  if (
+    trimmed.match(/^https?:\/\/maps\.app\.goo\.gl\//i) ||
+    trimmed.match(/^https?:\/\/goo\.gl\/maps\//i)
+  ) {
+    return "shortened";
+  }
+
+  // Google Maps URLs
+  if (
+    trimmed.match(/^https?:\/\/(www\.)?google\.com\/maps\//i) ||
+    trimmed.match(/^https?:\/\/maps\.google\.com\//i)
+  ) {
+    if (trimmed.includes("/maps/dir/")) return "directions";
+    if (trimmed.includes("/maps/placelists/")) return "list";
+    return "other";
+  }
+
+  return null;
+}
+
+/**
  * Parse a Google Maps directions URL to extract waypoints.
  *
  * Supports formats:
@@ -89,6 +125,37 @@ export function parseGoogleMapsUrl(url: string): ParsedLocation[] {
 }
 
 /**
+ * Check if a line looks like metadata from Google Maps (not a place name).
+ * These lines are skipped when parsing pasted text from Google Maps lists.
+ */
+function isMetadataLine(line: string): boolean {
+  // Rating lines: "4.5", "4.5 stars", "4.5(123)", "★★★★☆"
+  if (/^\d\.\d(\s*\([\d,]+\))?$/.test(line)) return true;
+  if (/^\d\.\d\s*stars?/i.test(line)) return true;
+  if (/^[★☆]{2,}/.test(line)) return true;
+
+  // Price range: "$", "$$", "$$$", "$$$$"
+  if (/^\${1,4}$/.test(line)) return true;
+
+  // "Open" / "Closed" / hours
+  if (/^(Open|Closed|Opens|Closes)\b/i.test(line)) return true;
+
+  // Phone numbers
+  if (/^\+?\(?\d{1,4}\)?[\s-]?\d{3,}/.test(line) && line.length < 20) return true;
+
+  // Very short lines that are likely categories (e.g., "Restaurant", "Park")
+  // We keep these since they might be place names too - skip only known patterns
+
+  // "N reviews" or "N ratings"
+  if (/^\d[\d,]*\s+(reviews?|ratings?)/i.test(line)) return true;
+
+  // Lines that are just a URL
+  if (/^https?:\/\//i.test(line)) return true;
+
+  return false;
+}
+
+/**
  * Parse a text block of coordinates or place names (one per line).
  *
  * Supports:
@@ -96,6 +163,9 @@ export function parseGoogleMapsUrl(url: string): ParsedLocation[] {
  * - "35.6762,139.6503" (no space)
  * - "Tokyo Tower" (place name)
  * - "Place Name, 35.6762, 139.6503" (name with coordinates)
+ * - "Place Name · Category" (Google Maps list format - strips category)
+ * - "Place Name · Category · Price" (strips everything after first middot)
+ * - "1. Place Name" or "- Place Name" (strips list prefixes)
  */
 export function parseCoordinateText(text: string): ParsedLocation[] {
   const lines = text
@@ -106,8 +176,23 @@ export function parseCoordinateText(text: string): ParsedLocation[] {
   const locations: ParsedLocation[] = [];
 
   for (const line of lines) {
+    // Skip metadata lines (ratings, hours, phone numbers, etc.)
+    if (isMetadataLine(line)) continue;
+
+    // Strip list prefixes: "1. ", "1) ", "- ", "• "
+    let cleaned = line.replace(/^(\d+[\.\)]\s*|[-•]\s*)/, "");
+
+    // Handle "Place Name · Category" format (Google Maps list paste)
+    // Strip everything after " · " (middot separator)
+    if (cleaned.includes(" · ") || cleaned.includes(" · ")) {
+      cleaned = cleaned.split(/\s*[·]\s*/)[0].trim();
+    }
+
+    // Skip if empty after cleaning
+    if (!cleaned) continue;
+
     // Try: "Name, lat, lng" format
-    const namedCoordMatch = line.match(
+    const namedCoordMatch = cleaned.match(
       /^(.+?),\s*(-?\d+\.?\d*),\s*(-?\d+\.?\d*)$/
     );
     if (namedCoordMatch) {
@@ -122,7 +207,7 @@ export function parseCoordinateText(text: string): ParsedLocation[] {
     }
 
     // Try: "lat, lng" format
-    const coordMatch = line.match(/^(-?\d+\.?\d*),\s*(-?\d+\.?\d*)$/);
+    const coordMatch = cleaned.match(/^(-?\d+\.?\d*),\s*(-?\d+\.?\d*)$/);
     if (coordMatch) {
       locations.push({
         raw: line,
@@ -137,7 +222,7 @@ export function parseCoordinateText(text: string): ParsedLocation[] {
     // Otherwise treat as a place name
     locations.push({
       raw: line,
-      name: line,
+      name: cleaned,
       isGeocoded: false,
     });
   }

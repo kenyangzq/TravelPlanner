@@ -29,12 +29,15 @@ import {
   XCircle,
   Star,
   Calendar,
+  ExternalLink,
+  Info,
 } from "lucide-react";
 import type { Trip } from "@/lib/models";
 import { parseCities } from "@/lib/models";
 import {
   parseGoogleMapsUrl,
   parseCoordinateText,
+  detectGoogleMapsUrlType,
   geocodeLocations,
   importAsActivities,
   importAsSavedPlaces,
@@ -71,11 +74,15 @@ export const ImportPlacesDialog: React.FC<ImportPlacesDialogProps> = ({
   const [activityStartTime, setActivityStartTime] = useState("10:00");
   const [activityDuration, setActivityDuration] = useState(60);
 
+  // Track detected list URL for "Open in Maps" flow
+  const [listUrl, setListUrl] = useState<string | null>(null);
+
   const cities = parseCities(trip.citiesRaw);
 
   const handleParse = async () => {
     setIsParsing(true);
     setImportResult(null);
+    setListUrl(null);
 
     try {
       let locations: ParsedLocation[];
@@ -86,6 +93,16 @@ export const ImportPlacesDialog: React.FC<ImportPlacesDialogProps> = ({
           .split("\n")
           .map((u) => u.trim())
           .filter((u) => u.length > 0);
+
+        // Check if any URL is a list or shortened URL
+        for (const url of urls) {
+          const urlType = detectGoogleMapsUrlType(url);
+          if (urlType === "list" || urlType === "shortened" || urlType === "other") {
+            setListUrl(url);
+            setIsParsing(false);
+            return;
+          }
+        }
 
         locations = [];
         for (const url of urls) {
@@ -152,9 +169,16 @@ export const ImportPlacesDialog: React.FC<ImportPlacesDialogProps> = ({
     setTextInput("");
     setParsedLocations([]);
     setImportResult(null);
+    setListUrl(null);
     setIsParsing(false);
     setIsImporting(false);
     onOpenChange(false);
+  };
+
+  const handleSwitchToText = () => {
+    setListUrl(null);
+    setInputMode("text");
+    setParsedLocations([]);
   };
 
   const geocodedCount = parsedLocations.filter((l) => l.isGeocoded).length;
@@ -206,7 +230,7 @@ export const ImportPlacesDialog: React.FC<ImportPlacesDialogProps> = ({
               className="w-full h-24 px-3 py-2 mt-1 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary resize-y"
             />
             <p className="text-xs text-gray-500 mt-1">
-              Paste one or more Google Maps direction URLs (one per line)
+              Paste Google Maps direction URLs or shared list links (one per line)
             </p>
           </div>
         ) : (
@@ -216,11 +240,11 @@ export const ImportPlacesDialog: React.FC<ImportPlacesDialogProps> = ({
               id="import-text"
               value={textInput}
               onChange={(e) => setTextInput(e.target.value)}
-              placeholder={"Tokyo Tower\nSenso-ji Temple\n35.6762, 139.6503\nMeiji Shrine, 35.6764, 139.6993"}
+              placeholder={"Tokyo Tower\nSenso-ji Temple · Temple\nCafe Du Monde · Coffee shop\n35.6762, 139.6503\nMeiji Shrine, 35.6764, 139.6993"}
               className="w-full h-24 px-3 py-2 mt-1 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary resize-y"
             />
             <p className="text-xs text-gray-500 mt-1">
-              One place per line. Supports: place names, coordinates (lat, lng), or &quot;Name, lat, lng&quot;
+              One place per line. Supports: place names, &quot;Name · Category&quot; (from Google Maps lists), coordinates, or &quot;Name, lat, lng&quot;
             </p>
           </div>
         )}
@@ -244,6 +268,44 @@ export const ImportPlacesDialog: React.FC<ImportPlacesDialogProps> = ({
             </>
           )}
         </Button>
+
+        {/* List URL detected - show instructions */}
+        {listUrl && (
+          <div className="space-y-3 p-3 rounded-md bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+            <div className="flex items-start gap-2">
+              <Info className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-blue-700 dark:text-blue-300">
+                <p className="font-medium">Google Maps list detected</p>
+                <p className="mt-1 text-blue-600 dark:text-blue-400">
+                  List URLs can&apos;t be parsed automatically. To import these places:
+                </p>
+                <ol className="mt-1 ml-4 list-decimal space-y-0.5 text-blue-600 dark:text-blue-400">
+                  <li>Open the list in Google Maps</li>
+                  <li>Copy the place names from the list</li>
+                  <li>Paste them in the &quot;Text / Coords&quot; tab</li>
+                </ol>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <a
+                href={listUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-700 transition-colors"
+              >
+                <ExternalLink className="w-4 h-4" />
+                Open in Google Maps
+              </a>
+              <button
+                onClick={handleSwitchToText}
+                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-700 transition-colors"
+              >
+                <List className="w-4 h-4" />
+                Paste Place Names
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Parsed locations preview */}
         {parsedLocations.length > 0 && (

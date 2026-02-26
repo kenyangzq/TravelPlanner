@@ -1,5 +1,13 @@
 # TravelPlanner Change History
 
+## 2026-02-26: Support Google Maps shared list URLs in import
+- Detect Google Maps list URLs (`/maps/placelists/`), shortened URLs (`maps.app.goo.gl`), and other non-direction URLs
+- Show instructional UI with "Open in Google Maps" button and "Paste Place Names" shortcut when list URL detected
+- Enhanced text parser to handle Google Maps list paste formats: "Place Name · Category" strips category after middot
+- Text parser now skips metadata lines (ratings, phone numbers, hours, review counts, URLs)
+- Text parser strips list prefixes ("1. ", "- ", "• ") from pasted text
+- Files modified: `TravelPlanner-Web/src/lib/services/importService.ts`, `TravelPlanner-Web/src/components/forms/import-places-dialog.tsx`
+
 ## 2026-02-26: Improve flight manual edit UI for mobile
 - Header row: airline name truncates on narrow screens, edit button shows icon-only on mobile
 - Manual edit inputs: date and time fields side-by-side per departure/arrival row on mobile
