@@ -1,5 +1,11 @@
 # TravelPlanner Change History
 
+## 2026-02-26: Improve flight manual edit UI for mobile
+- Header row: airline name truncates on narrow screens, edit button shows icon-only on mobile
+- Manual edit inputs: date and time fields side-by-side per departure/arrival row on mobile
+- Added "Departure"/"Arrival" section headers on mobile for clarity
+- Files modified: `TravelPlanner-Web/src/components/forms/flight-form.tsx`
+
 ## 2026-02-26: Add import places feature
 - New "Import" button in trip detail header to import a list of places
 - Supports Google Maps direction URLs (parses waypoints from /dir/ paths)
