@@ -198,6 +198,7 @@ TravelPlanner-Web/
 - **Mobile responsiveness**: All UI components use `sm:` Tailwind breakpoint (640px) for mobile vs desktop sizing. Button text shortens on mobile (e.g., "Add Event" → "Add", "Create New Trip" → "New", "Export" → icon-only). Timeline padding, font sizes, and spacing all scale down on mobile. Calendar header and body share a single scroll container so they scroll together horizontally.
 - **Azure routing fix**: All dynamic route navigation URLs use trailing slashes (`/trips/${tripId}/`) to match `trailingSlash: true` production config, preventing "Trip Not Found" errors.
 - **Past trips collapsed**: Trips whose `endDate` is before today are separated from upcoming trips and shown in a collapsible "Past Trips" section at the bottom of the trip list. Collapsed by default, users click to expand/collapse.
+- **Import places**: Users can import a list of places from Google Maps direction URLs or plain text (place names / coordinates). Import dialog accessible via "Import" button in trip header. Supports two input modes (URL parsing, text/coordinate parsing) and two import modes (as activity events with configurable date/time/duration, or as saved places stored in IndexedDB). Places are geocoded via Google Geocoding API with trip city biasing. Saved places stored in `savedPlaces` IndexedDB table (Dexie DB version 6).
 
 ### API Configuration (Web)
 - RapidAPI key stored in `.env.local` → `NEXT_PUBLIC_RAPIDAPI_KEY` (baked into client bundle at build time)

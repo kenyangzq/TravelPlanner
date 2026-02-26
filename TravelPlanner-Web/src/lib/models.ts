@@ -147,6 +147,20 @@ export interface ImageCache {
   fetchedAt: string; // ISO timestamp when image was fetched
 }
 
+// Saved place for imported locations
+export interface SavedPlace {
+  id: string;
+  tripId: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  address: string;
+  googlePlaceName?: string;
+  googlePlaceId?: string;
+  notes: string;
+  createdAt: string; // ISO date string
+}
+
 // Weather cache entry (stored in IndexedDB)
 export interface WeatherCache {
   id: string; // "{lat}_{lng}_{date}"

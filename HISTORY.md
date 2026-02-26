@@ -1,5 +1,16 @@
 # TravelPlanner Change History
 
+## 2026-02-26: Add import places feature
+- New "Import" button in trip detail header to import a list of places
+- Supports Google Maps direction URLs (parses waypoints from /dir/ paths)
+- Supports plain text input: place names, coordinate pairs (lat, lng), or "Name, lat, lng"
+- Two import modes: as activity events (with configurable date/time/duration) or as saved places
+- Geocodes place names via Google Geocoding API with trip city biasing
+- Real-time preview of parsed locations with success/failure indicators
+- New `SavedPlace` model and `savedPlaces` IndexedDB table (Dexie DB version 6)
+- Files added: `src/lib/services/importService.ts`, `src/components/forms/import-places-dialog.tsx`
+- Files modified: `src/lib/models.ts`, `src/lib/db.ts`, `src/app/trips/[tripId]/_components/trip-detail-client.tsx`
+
 ## 2026-02-26: Add manual edit mode for flight departure/arrival date and time
 - Users can now manually correct flight schedule times when the API returns incorrect data
 - Added "Edit Times" button in flight form that reveals date and time pickers for both departure and arrival

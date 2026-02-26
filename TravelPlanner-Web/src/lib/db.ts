@@ -18,6 +18,7 @@ import {
   Reminder,
   ImageCache,
   WeatherCache,
+  SavedPlace,
 } from "./models";
 
 /**
@@ -29,6 +30,7 @@ export class TravelPlannerDB extends Dexie {
   reminders!: Table<Reminder, string>;
   imageCache!: Table<ImageCache, string>;
   weatherCache!: Table<WeatherCache, string>;
+  savedPlaces!: Table<SavedPlace, string>;
 
   constructor() {
     super("TravelPlannerDB");
@@ -78,6 +80,16 @@ export class TravelPlannerDB extends Dexie {
       reminders: "id, tripId, [tripId+dayKey]",
       imageCache: "city, url, fetchedAt",
       weatherCache: "id, [lat+lng], date, fetchedAt",
+    });
+
+    // Version 6: Add savedPlaces for imported locations
+    this.version(6).stores({
+      trips: "id, startDate, createdAt",
+      events: "id, tripId, eventType, [tripId+startDate]",
+      reminders: "id, tripId, [tripId+dayKey]",
+      imageCache: "city, url, fetchedAt",
+      weatherCache: "id, [lat+lng], date, fetchedAt",
+      savedPlaces: "id, tripId, createdAt",
     });
   }
 }
@@ -392,5 +404,44 @@ export const dbHelpers = {
    */
   async deleteReminder(id: string): Promise<void> {
     await db.reminders.delete(id);
+  },
+
+  /**
+   * Get all saved places for a trip
+   */
+  async getSavedPlaces(tripId: string): Promise<SavedPlace[]> {
+    return await db.savedPlaces.where("tripId").equals(tripId).toArray();
+  },
+
+  /**
+   * Create a saved place
+   */
+  async createSavedPlace(place: Omit<SavedPlace, "id" | "createdAt">): Promise<string> {
+    const id = crypto.randomUUID();
+    await db.savedPlaces.add({
+      ...place,
+      id,
+      createdAt: new Date().toISOString(),
+    });
+    return id;
+  },
+
+  /**
+   * Bulk create saved places
+   */
+  async bulkCreateSavedPlaces(places: Omit<SavedPlace, "id" | "createdAt">[]): Promise<void> {
+    const records = places.map((p) => ({
+      ...p,
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+    }));
+    await db.savedPlaces.bulkAdd(records);
+  },
+
+  /**
+   * Delete a saved place
+   */
+  async deleteSavedPlace(id: string): Promise<void> {
+    await db.savedPlaces.delete(id);
   },
 };

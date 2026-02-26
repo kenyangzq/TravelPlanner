@@ -17,11 +17,12 @@ import { TripMapView } from "@/components/itinerary/trip-map-view";
 import { AddEventDialog } from "@/components/forms/add-event-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
-import { Plus, ArrowLeft, MapPin, Download } from "lucide-react";
+import { Plus, ArrowLeft, MapPin, Download, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { downloadICS } from "@/lib/utils/calendarExport";
 import { useEvents } from "@/lib/hooks/useEvents";
 import { getTripImageUrl, getTripImageUrlAsync } from "@/lib/services/imageService";
+import { ImportPlacesDialog } from "@/components/forms/import-places-dialog";
 
 interface TripDetailClientProps {
   tripId: string;
@@ -104,6 +105,7 @@ export function TripDetailClient({ tripId: propTripId }: TripDetailClientProps) 
   const hotels = useTripHotels(tripId);
   const carRentals = useTripCarRentals(tripId);
   const { events, deleteEvent } = useEvents(tripId);
+  const [isImportOpen, setIsImportOpen] = useState(false);
 
   const handleExportCalendar = () => {
     if (trip) {
@@ -161,6 +163,17 @@ export function TripDetailClient({ tripId: propTripId }: TripDetailClientProps) 
           </div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Import places button */}
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => setIsImportOpen(true)}
+            className="text-primary hover:bg-primary/5"
+          >
+            <Upload className="w-4 h-4" />
+            <span className="hidden sm:inline ml-1">Import</span>
+          </Button>
+
           {/* Export calendar button */}
           <Button
             size="sm"
@@ -272,6 +285,14 @@ export function TripDetailClient({ tripId: propTripId }: TripDetailClientProps) 
 
       {/* Add/Edit event dialog */}
       <AddEventDialog tripId={tripId} trip={trip} />
+
+      {/* Import places dialog */}
+      <ImportPlacesDialog
+        open={isImportOpen}
+        onOpenChange={setIsImportOpen}
+        tripId={tripId}
+        trip={trip}
+      />
 
       {/* Delete confirmation */}
       <ConfirmDialog
