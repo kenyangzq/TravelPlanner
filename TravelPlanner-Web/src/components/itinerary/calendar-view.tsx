@@ -62,10 +62,9 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     );
   }
 
-  // Time slots for the left column (6 AM to 11 PM)
-  const timeSlots = Array.from({ length: 18 }, (_, i) => {
-    const hour = i + 6; // Start at 6 AM
-    return { hour, label: format(new Date().setHours(hour, 0, 0, 0), "ha") };
+  // Time slots for the left column (12 AM to 11 PM - full day)
+  const timeSlots = Array.from({ length: 24 }, (_, i) => {
+    return { hour: i, label: format(new Date().setHours(i, 0, 0, 0), "ha") };
   });
 
   // Get all non-hotel and non-car-rental events for a specific day
@@ -85,7 +84,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     const startHour = startDate.getHours() + startDate.getMinutes() / 60;
     const endHour = endDate.getHours() + endDate.getMinutes() / 60;
 
-    const topOffset = Math.max(0, startHour - 6) * slotHeight;
+    const topOffset = startHour * slotHeight;
     const minHeight = slotHeight < 64 ? 32 : 80;
     const height = Math.max(minHeight, (endHour - startHour) * slotHeight);
 
@@ -223,7 +222,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
       {/* Calendar Grid */}
       <div className="bg-white dark:bg-slate-900 rounded-xl border-2 border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
         {/* Single scroll container so header and body scroll together horizontally */}
-        <div className="overflow-x-auto overflow-y-auto max-h-[600px] sm:max-h-[800px]">
+        <div className="overflow-x-auto overflow-y-auto max-h-[800px] sm:max-h-[1100px]">
           <div className="min-w-max">
             {/* Calendar header with day columns - sticks to top while vertical scrolling */}
             <div className="sticky top-0 z-10 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-slate-800 dark:to-slate-900 border-b">
