@@ -1,5 +1,11 @@
 # TravelPlanner Change History
 
+## 2026-02-26: Add manual edit mode for flight departure/arrival date and time
+- Users can now manually correct flight schedule times when the API returns incorrect data
+- Added "Edit Times" button in flight form that reveals date and time pickers for both departure and arrival
+- Manual edits persist even when edit panel is collapsed, and are applied when saving
+- Files modified: `TravelPlanner-Web/src/components/forms/flight-form.tsx`
+
 ## 2026-02-25: Fix location link priority to use coordinates first
 - **Problem**: When users had coordinates stored, location links still prioritized name+address search which could return local results based on user's current IP/location
 - **Solution**: Reordered `buildLocationLink()` to prioritize coordinates (most accurate) → name+address → name/address only
