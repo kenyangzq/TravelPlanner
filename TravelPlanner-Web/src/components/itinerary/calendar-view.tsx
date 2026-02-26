@@ -8,11 +8,11 @@
 import * as React from "react";
 import { format, eachDayOfInterval, parseISO, startOfDay, isSameDay } from "date-fns";
 import { EmptyState } from "../ui/empty-state";
-import { Calendar, MapPin, Plane, ExternalLink, Trash2, BookOpen } from "lucide-react";
-import type { Trip, HotelEvent, TripEvent } from "@/lib/models";
+import { Calendar, MapPin, Plane, ExternalLink, Trash2, BookOpen, Car } from "lucide-react";
+import type { Trip, HotelEvent, CarRentalEvent, TripEvent } from "@/lib/models";
 import type { EventsByDayResult } from "@/lib/hooks/useTripDetail";
 import { getEventIcon, getEventColor } from "@/lib/models";
-import { isFlightEvent, isHotelEvent } from "@/lib/db";
+import { isFlightEvent, isHotelEvent, isCarRentalEvent } from "@/lib/db";
 import { JournalDialog } from "./journal-dialog";
 import { useReminders } from "@/lib/hooks/useReminders";
 
@@ -20,6 +20,7 @@ interface CalendarViewProps {
   tripId: string;
   trip: Trip;
   hotels: HotelEvent[];
+  carRentals: CarRentalEvent[];
   eventsByDay: EventsByDayResult[];
   onEventClick: (eventId: string) => void;
   onDeleteEvent: (eventId: string) => void;
@@ -29,6 +30,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   tripId,
   trip,
   hotels,
+  carRentals,
   eventsByDay,
   onEventClick,
   onDeleteEvent,
@@ -66,12 +68,12 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     return { hour, label: format(new Date().setHours(hour, 0, 0, 0), "ha") };
   });
 
-  // Get all non-hotel events for a specific day
+  // Get all non-hotel and non-car-rental events for a specific day
   const getDayEvents = (day: Date): TripEvent[] => {
     const dayData = eventsByDay.find((d) => d.date.getTime() === day.getTime());
     if (!dayData) return [];
     return dayData.items
-      .filter((item) => !isHotelEvent(item.event))
+      .filter((item) => !isHotelEvent(item.event) && !isCarRentalEvent(item.event))
       .map((item) => item.event);
   };
 
@@ -148,6 +150,70 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
             {hotels.length === 0 && (
               <p className="text-sm text-slate-500 text-center py-4">
                 No accommodations booked for this trip
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Car Rentals Section - Separate block above calendar */}
+      {carRentals.length > 0 && (
+        <div className="bg-white dark:bg-slate-900 rounded-xl border-2 border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+          <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 dark:border-slate-800 bg-gradient-to-r from-green-50 to-green-100/50 dark:from-green-900/20 dark:to-green-900/10">
+            <h3 className="text-base sm:text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+              <Car className="w-5 h-5 text-green-600 dark:text-green-400" />
+              Car Rentals
+            </h3>
+          </div>
+          <div className="p-3 sm:p-6 grid gap-3 sm:gap-4">
+            {carRentals.map((carRental) => (
+              <div
+                key={carRental.id}
+                className="relative bg-gradient-to-r from-green-50 to-green-100/50 dark:from-green-900/20 dark:to-green-900/10 border border-green-200 dark:border-green-800 rounded-xl p-3 sm:p-4 hover:shadow-md transition-all cursor-pointer group"
+                onClick={() => onEventClick(carRental.id)}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-2 sm:gap-3 flex-1 min-w-0">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
+                      <Car className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-bold text-slate-800 dark:text-white text-base sm:text-lg mb-1 truncate">
+                        {carRental.rentalCompany || "Car Rental"}
+                      </h4>
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+                        <span>
+                          {format(parseISO(carRental.pickupDate), "MMM d")} → {format(parseISO(carRental.returnDate), "MMM d, yyyy")}
+                        </span>
+                      </div>
+                      {carRental.pickupLocationName && (
+                        <p className="text-sm text-slate-500 dark:text-slate-500 mt-1 truncate">
+                          Pickup: {carRental.pickupLocationName}
+                        </p>
+                      )}
+                      {carRental.returnLocationName && carRental.returnLocationName !== carRental.pickupLocationName && (
+                        <p className="text-sm text-slate-500 dark:text-slate-500 mt-1 truncate">
+                          Return: {carRental.returnLocationName}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteEvent(carRental.id);
+                    }}
+                    className="p-2 text-slate-400 hover:text-red-600 transition-colors opacity-0 group-hover:opacity-100"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+            {carRentals.length === 0 && (
+              <p className="text-sm text-slate-500 text-center py-4">
+                No car rentals for this trip
               </p>
             )}
           </div>

@@ -7,10 +7,11 @@
 
 import { useMemo } from "react";
 import { useEvents } from "./useEvents";
-import type { TripEvent, HotelEvent, DayHotelInfo, ItineraryItem } from "../models";
+import type { TripEvent, HotelEvent, CarRentalEvent, DayHotelInfo, ItineraryItem } from "../models";
 import {
   isHotelEvent,
   isFlightEvent,
+  isCarRentalEvent,
 } from "../db";
 import {
   buildNavigationToEvent,
@@ -164,5 +165,18 @@ export function useTripHotels(tripId: string): HotelEvent[] {
     return events
       .filter((e): e is HotelEvent => isHotelEvent(e))
       .sort((a, b) => new Date(a.checkInDate).getTime() - new Date(b.checkInDate).getTime());
+  }, [events]);
+}
+
+/**
+ * Hook to get all car rentals for a trip (for calendar view)
+ */
+export function useTripCarRentals(tripId: string): CarRentalEvent[] {
+  const { events } = useEvents(tripId);
+
+  return useMemo(() => {
+    return events
+      .filter((e): e is CarRentalEvent => isCarRentalEvent(e))
+      .sort((a, b) => new Date(a.pickupDate).getTime() - new Date(b.pickupDate).getTime());
   }, [events]);
 }

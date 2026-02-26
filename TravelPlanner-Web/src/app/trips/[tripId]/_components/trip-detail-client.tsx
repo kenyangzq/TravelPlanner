@@ -8,7 +8,7 @@
 
 import { useState, useEffect } from "react";
 import { format, parseISO } from "date-fns";
-import { useEventsByDay, useTripHotels } from "@/lib/hooks/useTripDetail";
+import { useEventsByDay, useTripHotels, useTripCarRentals } from "@/lib/hooks/useTripDetail";
 import { useTrips } from "@/lib/hooks/useTrips";
 import { useUIStore } from "@/lib/store";
 import { ListView } from "@/components/itinerary/list-view";
@@ -102,6 +102,7 @@ export function TripDetailClient({ tripId: propTripId }: TripDetailClientProps) 
   const trip = trips.find((t) => t.id === tripId);
   const eventsByDay = useEventsByDay(tripId);
   const hotels = useTripHotels(tripId);
+  const carRentals = useTripCarRentals(tripId);
   const { events, deleteEvent } = useEvents(tripId);
 
   const handleExportCalendar = () => {
@@ -249,6 +250,7 @@ export function TripDetailClient({ tripId: propTripId }: TripDetailClientProps) 
             tripId={tripId}
             trip={trip}
             hotels={hotels}
+            carRentals={carRentals}
             eventsByDay={eventsByDay}
             onEventClick={(eventId) => {
               const event = eventsByDay
